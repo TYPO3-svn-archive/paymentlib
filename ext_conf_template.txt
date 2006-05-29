@@ -1,0 +1,3 @@
+// $Id$
+  # cat=general; type=int; label= PID:Page ID of a sysfolder where transaction records are saved
+pid = 0
