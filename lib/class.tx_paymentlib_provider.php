@@ -4,7 +4,7 @@
 *
 *  Copyright notice
 *
-*  (c) 2005 Robert Lemke (robert@typo3.org)
+*  (c) 2005 Robert Lemke (robert@typo3.org), Tonni Aagesen (t3dev@support.pil.dk)
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -41,6 +41,18 @@ define('TX_PAYMENTLIB_TRANSACTION_RESULT_OTHER', 310);
 
 define('TX_PAYMENTLIB_GATEWAYMODE_FORM', 400);
 define('TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE', 401);
+
+define('TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZED', 500);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZE_FAILED', 501);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZED', 502);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZE_FAILED', 503);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_CAPTURED', 504);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_CAPTURE_FAILED', 505);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_REVERSED', 506);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_REVERSAL_FAILED', 507);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_CREDITED', 508);
+define('TX_PAYMENTLIB_TRANSACTION_STATE_CREDIT_FAILED', 509);
+
 
 /**
  * Abstract class defining the interface for provider implementations.
@@ -167,10 +179,11 @@ abstract class tx_paymentlib_provider {
 	/**
 	 * Returns the results of a processed transaction
 	 *
+	 * @param	string		$reference
 	 * @return	array		Results of a processed transaction
 	 * @access	public
 	 */
-	abstract public function transaction_getResults ();
+	abstract public function transaction_getResults ($reference);
 
 
 }

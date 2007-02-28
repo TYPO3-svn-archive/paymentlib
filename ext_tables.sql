@@ -1,25 +1,18 @@
-#
-# $Id$
-# Table structure for table 'tx_paymentlib_transactions'
-#
 CREATE TABLE tx_paymentlib_transactions (
-	uid int(11) unsigned DEFAULT '0' NOT NULL auto_increment,
-	pid int(11) unsigned DEFAULT '0' NOT NULL,
-	crdate int(11) unsigned DEFAULT '0' NOT NULL,
-	type int(11) unsigned DEFAULT '0' NOT NULL,	
-	extkey varchar(100) DEFAULT '' NOT NULL,
-	extreference text NOT NULL,
-	status varchar(20) DEFAULT '' NOT NULL,
-	amount varchar(10) DEFAULT '' NOT NULL,
-	currency varchar(10) DEFAULT '' NOT NULL,
-	invoicetext varchar(30) DEFAULT '' NOT NULL,
-	remotebookingnr varchar(50) DEFAULT '' NOT NULL,
-	remoteauthcode varchar(50) DEFAULT '' NOT NULL,
-	remotetimestamp int(11) unsigned DEFAULT '0' NOT NULL,
-	remoteerrorcode varchar(20) DEFAULT '' NOT NULL,
-	remotemessages text NOT NULL,
+	uid int(11) UNSIGNED NOT NULL auto_increment,
+	pid int(11) UNSIGNED DEFAULT '0' NOT NULL,
+	crdate int(11) UNSIGNED DEFAULT '0' NOT NULL,
+	gatewayid varchar(255) NOT NULL,
+	reference varchar(255) DEFAULT '0' NOT NULL,
+	currency varchar(3) DEFAULT '' NOT NULL,
+	amount bigint(64) UNSIGNED DEFAULT 0 NOT NULL,
+	state int(3) UNSIGNED DEFAULT '0' NOT NULL,
+	state_time int(11) UNSIGNED DEFAULT '0' NOT NULL,
+	message varchar(255) DEFAULT '' NOT NULL,
+	ext_key varchar(100) DEFAULT '' NOT NULL,
+	paymethod_key varchar(100) DEFAULT '' NOT NULL,	
+	user text DEFAULT '' NOT NULL,
 
 	PRIMARY KEY (uid),
 	KEY parent (pid)
 );
-

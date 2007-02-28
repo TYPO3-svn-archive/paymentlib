@@ -4,7 +4,7 @@
 *
 *  Copyright notice
 *
-*  (c) 2005 Robert Lemke (robert@typo3.org)
+*  (c) 2005 Robert Lemke (robert@typo3.org), Tonni Aagesen (t3dev@support.pil.dk)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -113,25 +113,27 @@ final class tx_paymentlib_providerfactory {
 	 * and optionally the given extension reference string and or booking status. 
 	 * Use this function instead accessing the transaction records directly.
 	 * 
-	 * @param		string		$extKey: Extension key
-	 * @param		string		$extRef: (optional) Filter by extension reference string 
-	 * @param		string		$status: (optional) Filter by status of the transaction ('booked' or 'failed')
+	 * @param		string		$ext_key: Extension key
+	 * @param		int			$gatewayid: (optional) Filter by gateway id
+	 * @param		string		$reference: (optional) Filter by reference  
+	 * @param		string		$state: (optional) Filter by transaction state
 	 * @return		array		Array of transaction records, FALSE if no records where found or an error occurred.
 	 * @access		public
 	 */
-	public function getTransactionsByExtKey ($extKey, $extRef=NULL, $status=NULL) {
+	public function getTransactionsByExtKey ($ext_key, $gatewayid=NULL, $reference=NULL, $state=NULL) {
 		global $TYPO3_DB;
 		
 		$transactionsArr = FALSE;
+		
 		$additionalWhere = ''; 
-
-		$additionalWhere .= (isset ($extRef)) ? ' AND extreference="'.$extRef.'"' : '';
-		$additionalWhere .= (isset ($status)) ? ' AND status="'.$status.'"' : '';
+		$additionalWhere .= (isset ($gatewayid)) ? ' AND gatewayid="'.$gatewayid.'"' : '';
+		$additionalWhere .= (isset ($invoiceid)) ? ' AND reference="'.$reference.'"' : '';
+		$additionalWhere .= (isset ($state)) ? ' AND state="'.$state.'"' : '';
 
 		$res = $TYPO3_DB->exec_SELECTquery (
 			'*',
 			'tx_paymentlib_transactions',
-			'extkey="'.$extKey.'"'.$additionalWhere,
+			'ext_key="'.$ext_key.'"'.$additionalWhere,
 			'',
 			'crdate DESC'
 		);	
@@ -139,7 +141,7 @@ final class tx_paymentlib_providerfactory {
 		if ($res && $TYPO3_DB->sql_num_rows ($res)) {
 			$transactionsArr = array();
 			while ($row = $TYPO3_DB->sql_fetch_assoc ($res)) {
-				$row['remotemessages'] = unserialize ($row['remotemessages']);
+				$row['user'] = $this->field2array($row['user']);
 				$transactionsArr[$row['uid']] = $row;
 			}
 		}
@@ -164,9 +166,25 @@ final class tx_paymentlib_providerfactory {
 		if (!$res || !$TYPO3_DB->sql_num_rows ($res)) return FALSE;
 
 		$row = $TYPO3_DB->sql_fetch_assoc ($res);
-		$row['remotemessages'] = unserialize ($row['remotemessages']);
+		$row['user'] = $this->field2array($row['user']);
+		
 		return $row;
 	}	
+
+	/**
+	 * Return an array with either a single value or an unserialized array
+	 * 
+	 * @param		mixed		$field: some value from a database field
+	 * @return 	array
+	 * @access		private
+	 */
+	private function field2array($field) {
+		if (!$field = @unserialize ($field)) {
+		    $field = array($field);
+		}		
+		return $field;	    
+	}
+
 }
 
 ?>

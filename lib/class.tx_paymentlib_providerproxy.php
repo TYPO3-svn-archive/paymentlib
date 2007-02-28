@@ -4,7 +4,7 @@
 *
 *  Copyright notice
 *
-*  (c) 2005 Robert Lemke (robert@typo3.org)
+*  (c) 2005 Robert Lemke (robert@typo3.org), Tonni Aagesen (t3dev@support.pil.dk)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -199,31 +199,32 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	/**
 	 * Returns the results of a processed transaction
 	 * 
+	 * @param	string		$orderid
 	 * @return	array		Results of a processed transaction
 	 * @access	public
 	 */
-	public function transaction_getResults () {
+	public function transaction_getResults ($reference) {
 		global $TYPO3_DB;
 
-		$resultsArr = $this->providerObj->transaction_getResults (); 
+		$resultsArr = $this->providerObj->transaction_getResults ($reference);
 		if (is_array ($resultsArr)) {
 			$dbResult = $TYPO3_DB->exec_SELECTquery (
-				'remotebookingnr',
+				'gatewayid',
 				'tx_paymentlib_transactions',
 				'uid='.intval($this->dbTransactionUid)
 			);
 
 			if ($dbResult) {
-				$row = $TYPO3_DB->sql_fetch_assoc($dbResult);								
-				if (is_array ($row) && $row['remotebookingnr'] === $resultsArr['remotebookingnr']) {
-					$resultsArr['internaltransactionuid'] = $this->dbTransactionUid;	
+				$row = $TYPO3_DB->sql_fetch_assoc($dbResult);
+				if (is_array ($row) && $row['gatewayid'] === $resultsArr['gatewayid']) {
+					$resultsArr['internaltransactionuid'] = $this->dbTransactionUid;
 				} else {
 						// If the transaction doesn't exist yet in the database, create a transaction record.
 						// Usually the case with unsuccessful orders with gateway mode FORM.
 					$fields = $resultsArr;
 					$fields['crdate'] = time();
 					$fields['pid'] = $this->extensionManagerConf['pid'];
-					$fields['remotemessages'] = serialize ($fields['remotemessages']);
+					//$fields['remotemessages'] = serialize ($fields['remotemessages']);
 					$dbResult = $TYPO3_DB->exec_INSERTquery (
 						'tx_paymentlib_transactions',
 						$fields
@@ -231,7 +232,6 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 				}
 			}
 		}
-	
 		return $resultsArr; 	
 	}
 
