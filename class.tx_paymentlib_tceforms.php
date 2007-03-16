@@ -41,13 +41,12 @@ class tx_paymentlib_tceforms {
 
 		if (is_array ($providerObjectsArr)) {
 			foreach ($providerObjectsArr as $providerObj) {
-				
 					// Get available payment methods for this provider and add it to the selection box:
 				$paymentMethodsArr = $providerObj->getAvailablePaymentMethods();
 				if (is_array ($paymentMethodsArr)) {
 					foreach ($paymentMethodsArr as $methodKey => $methodConf) {
 						$params['items'][] = array (
-							htmlspecialchars($LANG->sl($methodConf['label']) . ' [' . $methodKey . ']'), 
+							htmlspecialchars($providerObj->gatewayName . ': ' . $LANG->sl($methodConf['label'])), 
 							$methodKey,
 							$methodConf['iconpath'],
 						);

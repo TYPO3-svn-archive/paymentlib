@@ -155,6 +155,22 @@ abstract class tx_paymentlib_provider {
 	 */
 	abstract public function transaction_formGetActionURI ();
 
+    /**
+     * Returns any extra parameter for the form tag to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
+     *
+     * @return  string      Form tag extra parameters
+     * @access  public
+     */
+    abstract public function transaction_formGetFormParms ();
+    
+    /**
+     * Returns any extra parameter for the form submit button to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
+     *
+     * @return  string      Form submit button extra parameters
+     * @access  public
+     */
+    abstract public function transaction_formGetSubmitParms ();
+
 	/**
 	 * Returns an array of field names and values which must be included as hidden
 	 * fields in the form you render use mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
