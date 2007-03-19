@@ -1,1 +1,2 @@
--	Finish the backend module implementing transaction handling features
+
+	* Finish the backend module implementing transaction handling features

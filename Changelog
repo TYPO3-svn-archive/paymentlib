@@ -1,4 +1,4 @@
-VERSION SVN (0.2.0)
+VERSION 0.2.0
 
 	* Add to new abstract functions, which can be used for adding extra
 	functionality to the payment form (see paymentlib_offline for example):

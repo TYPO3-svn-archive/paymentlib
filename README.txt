@@ -175,8 +175,15 @@ The payment method used by paymentlib (eg. paymentlib_quickpay, paymentlib_ipaym
 
 [field:user]
 Any user defined values that is relevant for the transaction. Can be stored as a
-serialized array.
-	
+serialized array - Normally an array like:
+$user = Array(
+		'gateway' => Array (
+			// Gateway specific values
+		),
+		'extras' => Array (
+			// Any extra information like customer data etc.
+	),
+);
 
 
 5. FUTURE WORK
