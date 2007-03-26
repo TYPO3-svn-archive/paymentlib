@@ -10,7 +10,8 @@ CREATE TABLE tx_paymentlib_transactions (
 	state_time int(11) unsigned DEFAULT '0' NOT NULL,
 	message varchar(255) DEFAULT '' NOT NULL,
 	ext_key varchar(100) DEFAULT '' NOT NULL,
-	paymethod_key varchar(100) DEFAULT '' NOT NULL,	
+	paymethod_key varchar(100) DEFAULT '' NOT NULL,
+	paymethod_method varchar(100) DEFAULT '' NOT NULL,
 	user text,
 
 	PRIMARY KEY (uid),
