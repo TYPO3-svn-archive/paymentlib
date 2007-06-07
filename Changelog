@@ -2,7 +2,8 @@ VERSION SVN (~0.2.1)
 	* Added database field 'paymethod_method' which should hold the selected
 	payment method - eg. 'paymethod_method' => 'paymentlib_offline_giro', so a
 	specific method can be identified in the table tx_paymentlib_transactions.
-
+	* Fixed typos in transaction constants
+	* Fixed typos in README
 
 VERSION 0.2.0
 

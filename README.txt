@@ -126,8 +126,8 @@ transaction is registered.
 
 3. CREATING A PAYMENT METHOD
 --------------------------------------------------------------------------------
-For consistancy please name your extension paymethod_$myPaymentGateway A few
-examples: paymethod_quickpay, paymethod_ipayment etc.
+For consistancy please name your extension paymentlib_$myPaymentGateway A few
+examples: paymentlib_quickpay, paymentlib_ipayment etc.
 
 
 
