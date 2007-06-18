@@ -6,10 +6,7 @@ if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 if (TYPO3_MODE=='BE')	{
 	
 	require_once (t3lib_extMgm::extPath($_EXTKEY).'class.tx_paymentlib_tceforms.php');
-		
-	t3lib_extMgm::addModule('tools','txpaymentlibM1','',t3lib_extMgm::extPath($_EXTKEY).'mod1/');
-	t3lib_extMgm::addModule('tools','txpaymentlibM2','',t3lib_extMgm::extPath($_EXTKEY).'mod2/');
-	
+
 	t3lib_div::loadTCA('tt_content');
 	
 	$TCA['tx_paymentlib_transactions'] = Array (

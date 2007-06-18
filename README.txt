@@ -173,6 +173,9 @@ The extension key of the extension utilizing paymentlib
 [field:paymethod_key]
 The payment method used by paymentlib (eg. paymentlib_quickpay, paymentlib_ipayment etc.)
 
+[field:paymethod_method]
+The payment method used by paymentlib (eg. paymentlib_offline_giro, paymentlib_quickpay_cc_visa etc.)
+
 [field:user]
 Any user defined values that is relevant for the transaction. Can be stored as a
 serialized array - Normally an array like:

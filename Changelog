@@ -1,9 +1,14 @@
-VERSION SVN (~0.2.1)
+VERSION SVN (~0.2.2)
+
+VERSION 0.2.1
+
 	* Added database field 'paymethod_method' which should hold the selected
 	payment method - eg. 'paymethod_method' => 'paymentlib_offline_giro', so a
 	specific method can be identified in the table tx_paymentlib_transactions.
 	* Fixed typos in transaction constants
 	* Fixed typos in README
+	* The module "mod1" is removed. A seperate extension "paymentlib_admin" will
+	handle backend operations on the tx_paymentlib_transactions table
 
 VERSION 0.2.0
 
