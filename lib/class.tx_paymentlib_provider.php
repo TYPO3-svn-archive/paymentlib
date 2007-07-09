@@ -193,6 +193,26 @@ abstract class tx_paymentlib_provider {
 	abstract public function transaction_formGetVisibleFields ();
 
 	/**
+	 * Sets the URI which the user should be redirected to after a successful payment/transaction
+	 * If you provider/gateway implementation only supports one redirect URI, set okpage and
+	 * errorpage to the same URI
+	 * 
+	 * @return void
+	 * @access public
+	 */
+	abstract public function transaction_setOkPage ($uri);
+
+	/**
+	 * Sets the URI which the user should be redirected to after a failed payment/transaction
+	 * If you provider/gateway implementation only supports one redirect URI, set okpage and
+	 * errorpage to the same URI
+	 * 
+	 * @return void
+	 * @access public 
+	 */
+	abstract public function transaction_setErrorPage ($uri);
+	
+	/**
 	 * Returns the results of a processed transaction
 	 *
 	 * @param	string		$reference

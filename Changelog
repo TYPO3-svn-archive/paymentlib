@@ -1,4 +1,9 @@
-VERSION SVN (~0.2.2)
+VERSION SVN (~0.3.0)
+	* Added to interface functions for providing a general way of setting URIs
+	for redirecting users after a successful/failed transaction:
+		abstract public function transaction_setOkPage ($uri)
+		abstract public function transaction_setErrorPage ($uri)
+	* Fixed missing functions in unit tests
 
 VERSION 0.2.1
 

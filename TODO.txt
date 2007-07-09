@@ -1,2 +1,7 @@
 
-	* Finish the backend module implementing transaction handling features
+TODOS FOR UPCOMMING RELEASES
+============================
+
+In no particular order:
+
+	* Better dokumentation

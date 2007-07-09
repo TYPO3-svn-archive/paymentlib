@@ -221,6 +221,26 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	}
 
 	/**
+	 * Sets the URI which the user should be redirected to after a successful payment/transaction
+	 * 
+	 * @return void
+	 * @access public
+	 */
+	public function transaction_setOkPage ($uri) {
+	    $this->providerObj->transaction_setOkPage($uri);
+	}
+
+	/**
+	 * Sets the URI which the user should be redirected to after a failed payment/transaction
+	 * 
+	 * @return void
+	 * @access public 
+	 */
+	public function transaction_setErrorPage ($uri) {
+	    $this->providerObj->transaction_setErrorPage($uri);
+	}
+	
+	/**
 	 * Returns the results of a processed transaction
 	 * 
 	 * @param	string		$orderid
