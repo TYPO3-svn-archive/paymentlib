@@ -4,6 +4,7 @@ VERSION SVN (~0.3.0)
 		abstract public function transaction_setOkPage ($uri)
 		abstract public function transaction_setErrorPage ($uri)
 	* Fixed missing functions in unit tests
+	* Explain unit test framework verification
 
 VERSION 0.2.1
 

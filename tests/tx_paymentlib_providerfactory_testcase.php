@@ -51,7 +51,7 @@ class tx_paymentlib_providerfactory_testcase extends PHPUnit2_Framework_TestCase
 	}
 
 	public function test_malEinTest()  {
-		self::assertTrue (1==2, 'Eins ist nicht gleich eins');	
+		self::assertTrue (1==2, '1 does not equal 2 - unit test framework "catch error" verification');	
 	}
 }
 
