@@ -194,7 +194,7 @@ abstract class tx_paymentlib_provider {
 
 	/**
 	 * Sets the URI which the user should be redirected to after a successful payment/transaction
-	 * If you provider/gateway implementation only supports one redirect URI, set okpage and
+	 * If your provider/gateway implementation only supports one redirect URI, set okpage and
 	 * errorpage to the same URI
 	 * 
 	 * @return void
@@ -204,7 +204,7 @@ abstract class tx_paymentlib_provider {
 
 	/**
 	 * Sets the URI which the user should be redirected to after a failed payment/transaction
-	 * If you provider/gateway implementation only supports one redirect URI, set okpage and
+	 * If your provider/gateway implementation only supports one redirect URI, set okpage and
 	 * errorpage to the same URI
 	 * 
 	 * @return void
