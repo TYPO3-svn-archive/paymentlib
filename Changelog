@@ -1,4 +1,6 @@
 VERSION SVN (~0.3.0)
+
+VERSION 0.3.0
 	* Added to interface functions for providing a general way of setting URIs
 	for redirecting users after a successful/failed transaction:
 		abstract public function transaction_setOkPage ($uri)
