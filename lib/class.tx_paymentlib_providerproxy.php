@@ -4,7 +4,7 @@
 *
 *  Copyright notice
 *
-*  (c) 2005 Robert Lemke (robert@typo3.org), Tonni Aagesen (t3dev@support.pil.dk)
+*  (c) 2009 Robert Lemke (robert@typo3.org), Tonni Aagesen (t3dev@support.pil.dk)
 *  All rights reserved
 *
 *  This script is part of the Typo3 project. The Typo3 project is
@@ -29,28 +29,29 @@ require_once (t3lib_extMgM::extPath('paymentlib').'lib/class.tx_paymentlib_provi
 /**
  * Proxy class implementing the interface for provider implementations. This
  * class hangs between the real provider implementation and the application
- * using it. 
+ * using it.
  *
  * @package 	TYPO3
  * @subpackage	tx_paymentlib
  * @author		Robert Lemke <robert@typo3.org>
  */
-class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
-
-	public $providerObj;
+class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
+	private $providerObj;
 	protected $extensionManagerConf;
+
 
 	/**
 	 * Constructor. Pass the class name of a provider implementation.
 	 *
-	 * @param	string		$providerClass: Class name of a provider implementation acting as the "Real Subject" 
+	 * @param	string		$providerClass: Class name of a provider implementation acting as the "Real Subject"
 	 * @return	void
 	 * @access	public
 	 */
 	public function __construct ($providerClass) {
+		$this->extensionManagerConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['paymentlib']);
 		$this->providerObj = new $providerClass;
-		$this-> extensionManagerConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['paymentlib']);
-	} 	
+	}
+
 
 	/**
 	 * Returns the provider key. Each provider implementation should have such
@@ -60,8 +61,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function getProviderKey () {
-		return $this->providerObj->getProviderKey ();	
+		return $this->providerObj->getProviderKey ();
 	}
+
 
 	/**
 	 * Returns an array of keys of the supported payment methods
@@ -70,12 +72,13 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function getAvailablePaymentMethods () {
-		return $this->providerObj->getAvailablePaymentMethods ();	
+		return $this->providerObj->getAvailablePaymentMethods();
 	}
+
 
 	/**
 	 * Returns TRUE if the payment implementation supports the given gateway mode.
-	 * All implementations should at least support the mode 
+	 * All implementations should at least support the mode
 	 * TX_PAYMENTLIB_GATEWAYMODE_FORM.
 	 *
 	 * TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE usually requires your webserver and
@@ -86,8 +89,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function supportsGatewayMode ($gatewayMode) {
-		return $this->providerObj->supportsGatewayMode ($gatewayMode);	
+		return $this->providerObj->supportsGatewayMode($gatewayMode);
 	}
+
 
 	/**
 	 * Initializes a transaction.
@@ -101,8 +105,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 */
 	public function transaction_init ($action, $method, $gatewaymode, $callingExtKey) {
 		unset ($this->dbTransactionUid);
-		return $this->providerObj->transaction_init ($action, $method, $gatewaymode, $callingExtKey);	
-	}	
+		return $this->providerObj->transaction_init($action, $method, $gatewaymode, $callingExtKey);
+	}
+
 
 	/**
 	 * Sets the payment details. Which fields can be set usually depends on the
@@ -114,8 +119,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function transaction_setDetails ($detailsArr) {
-		return $this->providerObj->transaction_setDetails ($detailsArr);	
+		return $this->providerObj->transaction_setDetails($detailsArr);
 	}
+
 
 	/**
 	 * Validates the transaction data which was set by transaction_setDetails().
@@ -130,8 +136,45 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function transaction_validate ($level=1) {
-		return $this->providerObj->transaction_validate ($level);	
+		return $this->providerObj->transaction_validate($level);
 	}
+
+
+	/**
+	 * Returns if the transaction has been successfull
+	 *
+	 * @param	array		results from transaction_getResults
+	 * @return	boolean		TRUE if the transaction went fine
+	 * @access	public
+	 */
+	public function transaction_succeded ($resultsArr)	{
+		return $this->providerObj->transaction_succeded($resultsArr);
+	}
+
+
+	/**
+	 * Returns if the transaction has been unsuccessfull
+	 *
+	 * @param	array		results from transaction_getResults
+	 * @return	boolean		TRUE if the transaction went wrong
+	 * @access	public
+	 */
+	public function transaction_failed ($resultsArr)	{
+		return $this->providerObj->transaction_failed($resultsArr);
+	}
+
+
+	/**
+	 * Returns if the message of the transaction
+	 *
+	 * @param	array		results from transaction_getResults
+	 * @return	boolean		TRUE if the transaction went wrong
+	 * @access	public
+	 */
+	public function transaction_message ($resultsArr)	{
+		return $this->providerObj->transaction_message($resultsArr);
+	}
+
 
 	/**
 	 * Submits the prepared transaction to the payment gateway
@@ -144,22 +187,23 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 */
 	public function transaction_process () {
 		global $TYPO3_DB;
-		
-		$processResult = $this->providerObj->transaction_process ();			
+
+		$processResult = $this->providerObj->transaction_process ();
 		$resultsArr = $this->providerObj->transaction_getResults();
 		if (is_array ($resultsArr)) {
 			$fields = $resultsArr;
 			$fields['crdate'] = time();
 			$fields['pid'] = intval($this->extensionManagerConf['pid']);
-			$fields['remotemessages'] = (is_array ($fields['remotemessages'])) ? serialize($fields['remotemessages']) : $fields['remotemessages'];			
+			$fields['remotemessages'] = (is_array ($fields['remotemessages'])) ? serialize($fields['remotemessages']) : $fields['remotemessages'];
 			$dbResult = $TYPO3_DB->exec_INSERTquery (
 				'tx_paymentlib_transactions',
 				$fields
-			);				
-			$this->dbTransactionUid = $TYPO3_DB->sql_insert_id();		
+			);
+			$this->dbTransactionUid = $TYPO3_DB->sql_insert_id();
 		}
-		return $processResult;			
+		return $processResult;
 	}
+
 
 	/**
 	 * Returns the form action URI to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
@@ -168,8 +212,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function transaction_formGetActionURI () {
-		return $this->providerObj->transaction_formGetActionURI ();	
+		return $this->providerObj->transaction_formGetActionURI();
 	}
+
 
     /**
      * Returns any extra parameter for the form tag to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
@@ -179,10 +224,11 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
      */
     public function transaction_formGetFormParms () {
         if ($this->gatewayMode != TX_PAYMENTLIB_GATEWAYMODE_FORM) return '';
-        
-        return $this->providerObj->transaction_formGetFormParms ();
+
+        return $this->providerObj->transaction_formGetFormParms();
     }
-    
+
+
     /**
      * Returns any extra parameter for the form submit button to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
      *
@@ -191,9 +237,10 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
      */
     public function transaction_formGetSubmitParms () {
         if ($this->gatewayMode != TX_PAYMENTLIB_GATEWAYMODE_FORM) return '';
-        
-        return $this->providerObj->transaction_formGetSubmitParms ();
+
+        return $this->providerObj->transaction_formGetSubmitParms();
     }
+
 
 	/**
 	 * Returns an array of field names and values which must be included as hidden
@@ -203,8 +250,9 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function transaction_formGetHiddenFields () {
-		return $this->providerObj->transaction_formGetHiddenFields ();	
+		return $this->providerObj->transaction_formGetHiddenFields();
 	}
+
 
 	/**
 	 * Returns an array of field names and their configuration which must be rendered
@@ -217,12 +265,13 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @access	public
 	 */
 	public function transaction_formGetVisibleFields () {
-		return $this->providerObj->transaction_formGetVisibleFields ();	
+		return $this->providerObj->transaction_formGetVisibleFields();
 	}
+
 
 	/**
 	 * Sets the URI which the user should be redirected to after a successful payment/transaction
-	 * 
+	 *
 	 * @return void
 	 * @access public
 	 */
@@ -230,19 +279,21 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	    $this->providerObj->transaction_setOkPage($uri);
 	}
 
+
 	/**
 	 * Sets the URI which the user should be redirected to after a failed payment/transaction
-	 * 
+	 *
 	 * @return void
-	 * @access public 
+	 * @access public
 	 */
 	public function transaction_setErrorPage ($uri) {
 	    $this->providerObj->transaction_setErrorPage($uri);
 	}
-	
+
+
 	/**
 	 * Returns the results of a processed transaction
-	 * 
+	 *
 	 * @param	string		$orderid
 	 * @return	array		Results of a processed transaction
 	 * @access	public
@@ -250,7 +301,7 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	public function transaction_getResults ($reference) {
 		global $TYPO3_DB;
 
-		$resultsArr = $this->providerObj->transaction_getResults ($reference);
+		$resultsArr = $this->providerObj->transaction_getResults($reference);
 		if (is_array ($resultsArr)) {
 			$dbResult = $TYPO3_DB->exec_SELECTquery (
 				'gatewayid',
@@ -269,15 +320,16 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 					$fields['crdate'] = time();
 					$fields['pid'] = $this->extensionManagerConf['pid'];
 					//$fields['remotemessages'] = serialize ($fields['remotemessages']);
-					$dbResult = $TYPO3_DB->exec_INSERTquery (
+					$dbResult = $TYPO3_DB->exec_INSERTquery(
 						'tx_paymentlib_transactions',
 						$fields
 					);
 				}
 			}
 		}
-		return $resultsArr; 	
+		return $resultsArr;
 	}
+
 
 	/**
 	 * Methods of the provider implementation which this proxy class does not know
@@ -288,23 +340,30 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @param	string		$method:	Method name
 	 * @param	array		$params:	Parameters
 	 * @return	mixed		Result
-	 * @access	public 
+	 * @access	public
 	 */
 	public function __call ($method, $params) {
-		 return call_user_func_array(array($this->providerObj, $method), $params);
+		if (method_exists($this, $method))	{
+			$rc = call_user_func_array(array($this->providerObj, $method), $params);
+		} else {
+			debug ('ERROR: unkown method "' . $method . '" in call of tx_paymentlib_providerproxy object');
+			$rc = FALSE;
+		}
+		return $rc;
 	}
+
 
 	/**
 	 * Returns the property of the real subject (provider object).
 	 *
 	 * @param	string		$property: Name of the variable
 	 * @return	mixed		The value.
-	 * @access	public 
+	 * @access	public
 	 */
 	public function __get ($property) {
 		return $this->providerObj->$property;
 	}
-		
+
 
 	/**
 	 * Sets the property of the real subject (provider object)
@@ -312,15 +371,46 @@ class tx_paymentlib_providerproxy extends tx_paymentlib_provider {
 	 * @param	string		$property: Name of the variable
 	 * @param	mixed		$value: The new value
 	 * @return	void
-	 * @access	public 
+	 * @access	public
 	 */
 	public function __set ($property, $value) {
 		$this->providerObj->$property = $value;
-	}	
-
-	public function getRealInstance () {
-		return $this->providerObj;	
 	}
+
+
+	public function createUniqueID ($orderuid, $callingExtension)	{
+		$rc = $this->providerObj->createUniqueID($orderuid, $callingExtension);
+		return $rc;
+	}
+
+
+	public function clearErrors ()	{
+		$this->providerObj->clearErrors();
+	}
+
+
+	public function addError ($error)	{
+		$this->providerObj->addError($error);
+	}
+
+
+	public function hasErrors ()	{
+		$this->providerObj->hasErrors();
+	}
+
+
+	public function getErrors ()	{
+		$this->providerObj->getErrors();
+	}
+
+
+	public function usesBasket ()	{
+		$this->providerObj->usesBasket();
+	}
+
+// 	public function getRealInstance () {
+// 		return $this->providerObj;
+// 	}
 
 }
 

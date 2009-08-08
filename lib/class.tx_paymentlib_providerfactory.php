@@ -28,37 +28,39 @@
  * [CLASS/FUNCTION INDEX of SCRIPT]
  */
 
-require_once(t3lib_extMgm::extPath('paymentlib').'lib/class.tx_paymentlib_providerproxy.php');
+require_once(t3lib_extMgm::extPath('paymentlib') . 'lib/class.tx_paymentlib_providerproxy.php');
 
 final class tx_paymentlib_providerfactory {
 
 	private static $instance = FALSE;				// Holds an instance of this class
 	private $providerProxyObjects = array();		// An array of proxy objects, each pointing to a registered provider object
+	private $errorMessage = '';
+	private $errorStack;
 
 	/**
 	 * This constructor is private because you may only instantiate this class by calling
 	 * the function getInstance() which returns a unique instance of this class (Singleton).
-	 * 
+	 *
 	 * @return		void
 	 * @access		private
 	 */
-	private function __construct() {
+	private function __construct () {
 	}
 
 	/**
 	 * Returns a unique instance of this class. Call this function instead of creating a new
 	 * instance manually!
-	 * 
+	 *
 	 * @return		object		Unique instance of tx_paymentlib_factory
 	 * @access		public
 	 */
-	public function getInstance() {
+	public function getInstance () {
 		if (self::$instance === FALSE) {
-			self::$instance = new tx_paymentlib_providerfactory;	
+			self::$instance = new tx_paymentlib_providerfactory;
 		}
-		return self::$instance;	
-	} 
-	
+		return self::$instance;
+	}
+
 	/**
 	 * Registers the given class as a payment provider (concrete product). This method will
 	 * be called by the provider implementation itself, usually from  ext_tables.php.
@@ -68,64 +70,72 @@ final class tx_paymentlib_providerfactory {
 	 * @access		public
 	 */
 	public function registerProviderClass ($className) {
-		if (class_exists ($className)) {		
-			$this->providerProxyObjects[$className] = new tx_paymentlib_providerproxy ($className);
-			return $this->providerProxyObjects[$className];
+		if (class_exists($className)) {
+			$this->providerProxyObjects[$className] = new tx_paymentlib_providerproxy($className);
+			$rc = $this->providerProxyObjects[$className];
+		} else {
+			$rc = FALSE;
 		}
-		return FALSE;
+		return $rc;
 	}
 
 	/**
 	 * Returns an array of instantiated payment implementations wrapped by a proxy
 	 * object. We use this proxy as a smart reference: All function calls and access
 	 * to variables are redirected to the real provider object but in some cases
-	 * some additional operation is done. 
-	 * 
+	 * some additional operation is done.
+	 *
 	 * @return		array		Array of payment implementations (objects)
 	 * @access		public
 	 */
-	public function getProviderObjects() {
+	public function getProviderObjects () {
 		return $this->providerProxyObjects;
 	}
-	
+
 	/**
 	 * Returns instance of the payment implementations (wrapped by a proxy
-	 * object) which offers the specified payment method. 
-	 * 
+	 * object) which offers the specified payment method.
+	 *
 	 * @param		string		$paymentMethod: Payment method key
 	 * @return		mixed		Reference to payment proxy object or FALSE if no matching object was found
 	 * @access		public
 	 */
-	public function getProviderObjectByPaymentMethod($paymentMethod) {
+	public function getProviderObjectByPaymentMethod ($paymentMethod) {
 		if (is_array ($this->providerProxyObjects)) {
 			foreach ($this->providerProxyObjects as $providerClass => $providerProxyObject) {
 				$paymentMethodsArr = $providerProxyObject->getAvailablePaymentMethods();
-				if (array_key_exists ($paymentMethod, $paymentMethodsArr)) {
-					return $providerProxyObject;
+				if (is_array($paymentMethodsArr) && array_key_exists($paymentMethod, $paymentMethodsArr)) {
+					$rc = $providerProxyObject;
+					break;
+				} else {
+					if ($paymentMethodsArr != FALSE) {
+						$this->addError('tx_paymentlib_providerfactory::getProviderObjectByPaymentMethod ' . $paymentMethodsArr);
+					}
+					$rc = FALSE;
 				}
-			}	
+			}
 		}
-		return FALSE;
+		return $rc;
 	}
 
 	/**
 	 * Returns an array of transaction records which match the given extension key
-	 * and optionally the given extension reference string and or booking status. 
+	 * and optionally the given extension reference string and or booking status.
 	 * Use this function instead accessing the transaction records directly.
-	 * 
+	 *
 	 * @param		string		$ext_key: Extension key
 	 * @param		int			$gatewayid: (optional) Filter by gateway id
-	 * @param		string		$reference: (optional) Filter by reference  
+	 * @param		string		$reference: (optional) Filter by reference
 	 * @param		string		$state: (optional) Filter by transaction state
 	 * @return		array		Array of transaction records, FALSE if no records where found or an error occurred.
 	 * @access		public
 	 */
 	public function getTransactionsByExtKey ($ext_key, $gatewayid=NULL, $reference=NULL, $state=NULL) {
 		global $TYPO3_DB;
-		
+
 		$transactionsArr = FALSE;
-		
-		$additionalWhere = ''; 
+
+		$additionalWhere = '';
 		$additionalWhere .= (isset ($gatewayid)) ? ' AND gatewayid="'.$gatewayid.'"' : '';
 		$additionalWhere .= (isset ($invoiceid)) ? ' AND reference="'.$reference.'"' : '';
 		$additionalWhere .= (isset ($state)) ? ' AND state="'.$state.'"' : '';
@@ -136,7 +146,7 @@ final class tx_paymentlib_providerfactory {
 			'ext_key="'.$ext_key.'"'.$additionalWhere,
 			'',
 			'crdate DESC'
-		);	
+		);
 
 		if ($res && $TYPO3_DB->sql_num_rows ($res)) {
 			$transactionsArr = array();
@@ -146,43 +156,59 @@ final class tx_paymentlib_providerfactory {
 			}
 		}
 		return $transactionsArr;
-	}	
+	}
 
 	/**
 	 * Returns a single transaction record which matches the given uid
-	 * 
+	 *
 	 * @param		integer		$uid: UID of the transaction
 	 * @access		public
 	 */
 	public function getTransactionByUid ($uid) {
 		global $TYPO3_DB;
-		
+
 		$res = $TYPO3_DB->exec_SELECTquery (
 			'*',
 			'tx_paymentlib_transactions',
 			'uid='.$uid
-		);	
+		);
 
 		if (!$res || !$TYPO3_DB->sql_num_rows ($res)) return FALSE;
 
 		$row = $TYPO3_DB->sql_fetch_assoc ($res);
 		$row['user'] = $this->field2array($row['user']);
-		
+
 		return $row;
-	}	
+	}
 
 	/**
 	 * Return an array with either a single value or an unserialized array
-	 * 
+	 *
 	 * @param		mixed		$field: some value from a database field
 	 * @return 	array
 	 * @access		private
 	 */
-	private function field2array($field) {
+	private function field2array ($field) {
 		if (!$field = @unserialize ($field)) {
 		    $field = array($field);
-		}		
-		return $field;	    
+		}
+		return $field;
+	}
+
+	public function clearErrors()	{
+		$this->errorStack = array();
+	}
+
+	public function addError($error)	{
+		$this->errorStack[] = $error;
+	}
+
+	public function hasErrors()	{
+		$rc = (count($this->errorStack) > 0);
+	}
+
+	public function getErrors()	{
+		return $this->errorStack;
 	}
 
 }
