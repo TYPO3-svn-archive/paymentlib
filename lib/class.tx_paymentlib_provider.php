@@ -25,6 +25,7 @@
 ***************************************************************/
 
 require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_provider_int.php');
+require_once(t3lib_extMgm::extPath('paymentlib') . 'lib/class.tx_paymentlib_provider_base.php');
 
 
 /**
@@ -39,7 +40,7 @@ require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paym
  * @version		1.1.0
  * @author		Robert Lemke <robert@typo3.org>
  */
-abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
+abstract class tx_paymentlib_provider  extends tx_paymentlib_provider_base implements tx_paymentlib_provider_int {
 	protected $providerKey = "paymentlib";	// must be overridden
 	protected $extKey = "paymentlib";		// must be overridden
 	protected $supportedGatewayArray = array();	// must be overridden
@@ -167,18 +168,22 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	}
 
 
+	// TODO: Describtion is missing
+	
 	public function getConfig ()	{
 		return $this->config;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function setCookieArray ($cookieArray)	{
 		if (is_array($cookieArray))	{
 			$this->cookieArray = array_merge($this->cookieArray, $cookieArray);
 		}
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getCookies ()	{
 		$rc = '';
 		if (count($this->cookieArray))	{
@@ -191,7 +196,8 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		return $rc;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getLanguage ()	{
 		global $TSFE;
 
@@ -254,22 +260,26 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		return $rc;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getDetails ()	{
 		return $this->detailsArr;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getGatewayMode ()	{
 		return $this->gatewayMode;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getPaymentMethod ()	{
 		return $this->paymentMethod;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getCallingExtension ()	{
 		return $this->callingExtension;
 	}
@@ -344,13 +354,15 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		return '';
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function createUniqueID ($orderuid, $callingExtension)	{
 		$rc = $this->providerKey . '#' . md5($callingExtension . '-' . $orderuid);
 		return $rc;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function transaction_succeded ($resultsArr)	{
 		if ($resultsArr['status'] == TRANSACTION_SUCCESS)	{
 			$rc = TRUE;
@@ -361,7 +373,8 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		return $rc;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function transaction_failed ($resultsArr)	{
 
 		if ($resultsArr['status'] == TRANSACTION_FAILED)	{
@@ -373,32 +386,38 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		return $rc;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function transaction_message ($resultsArr)	{
 		return $resultsArr['errmsg'];
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function clearErrors ()	{
 		$this->errorStack = array();
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function addError ($error)	{
 		$this->errorStack[] = $error;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function hasErrors ()	{
 		$rc = (count($this->errorStack) > 0);
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function getErrors ()	{
 		return $this->errorStack;
 	}
 
-
+	// TODO: Describtion is missing
+	
 	public function usesBasket ()	{
 		$rc = (intval($this->bSendBasket) > 0) || isset($this->detailsArr['basket']) && is_array($this->detailsArr['basket']) && count($this->detailsArr['basket']);
 
