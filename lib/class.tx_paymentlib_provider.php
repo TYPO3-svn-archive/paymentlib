@@ -141,15 +141,19 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
 	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$callingExtKey: Extension key of the calling script.
+	 * @param	array		$conf: configuration. This will override former configuration from the exension manager.
 	 * @return	void
 	 * @access	public
 	 */
-	public function transaction_init ($action, $paymentMethod, $gatewayMode, $callingExtKey)	{
+	public function transaction_init ($action, $paymentMethod, $gatewayMode, $callingExtKey, $conf=array())	{
 		if ($this->supportsGatewayMode($gatewayMode))	{
 			$this->action = $action;
 			$this->paymentMethod = $paymentMethod;
 			$this->gatewayMode = $gatewayMode;
 			$this->callingExtension = $callingExtKey;
+			if (is_array($this->conf) && is_array($conf))	{
+				$this->conf = array_merge($this->conf, $conf);
+			}
 			$rc = TRUE;
 		} else {
 			$rc = FALSE;
@@ -309,8 +313,9 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	 * @access	public
 	 */
 	public function transaction_formGetActionURI ()	{
+
 		if ($this->gatewayMode == TX_PAYMENTLIB_GATEWAYMODE_FORM)	{
-			$rc = $this->formActionURI;
+			$rc = $this->conf['formActionURI'];
 		} else {
 			$rc = FALSE;
 		}
