@@ -1,9 +1,8 @@
 <?php
 
-require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_base_payment_int.php');
 
 interface tx_paymentlib_transaction_int {
-	
+
 /***************************************************************
 * $Id$
 *
@@ -28,18 +27,18 @@ interface tx_paymentlib_transaction_int {
 *
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
-	
+
 	// Error codes / messages
 	const INVALID_CONSTRUCTOR_ARGUMENTS = 0x999;
 	const INVALID_CONSTRUCTOR_MESSAGE = "Transaction initalizing arguments are missing!";
-	
+
 	// Transaction results
 	const TX_PAYMENTLIB_TRANSACTION_RESULT_APPROVED = 300;
 	const TX_PAYMENTLIB_TRANSACTION_RESULT_DECLINED = 301;
 	const TX_PAYMENTLIB_TRANSACTION_RESULT_FRAUD = 302;
 	const TX_PAYMENTLIB_TRANSACTION_RESULT_DUPLICATE = 303;
 	const TX_PAYMENTLIB_TRANSACTION_RESULT_OTHER = 310;
-	
+
 	// Transaction states
 	const TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZED = 500;
 	const TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZE_FAILED = 501;
@@ -51,102 +50,102 @@ interface tx_paymentlib_transaction_int {
 	const TX_PAYMENTLIB_TRANSACTION_STATE_CREDIT_FAILED = 507;
 	const TX_PAYMENTLIB_TRANSACTION_STATE_RENEWED = 508;
 	const TX_PAYMENTLIB_TRANSACTION_STATE_RENEWAL_FAILED = 509;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getBasket() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCreated() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCurrency() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCallingExtension() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getGateway() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getPaymentMethod() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getState() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getStateMessage() ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getTransactionAmount() ;
-	
+
 	/**
 	 * @param unknown_type $basket
 	 */
 	public function setBasket($basket) ;
-	
+
 	/**
 	 * @param unknown_type $created
 	 */
 	private function setCreated($created) ;
-	
+
 	/**
 	 * @param unknown_type $extension
 	 */
 	private function setCallingExtension($extension) ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	private function getTransactionId() ;
-	
+
 	/**
 	 * @param unknown_type $gateway
 	 */
 	private function setGateway($gateway) ;
-	
+
 	/**
 	 * @param unknown_type $currency
 	 */
 	public function setCurrency($currency) ;
-	
+
 	/**
 	 * @param unknown_type $paymentMethod
 	 */
 	public function setPaymentMethod(tx_paymentlib_base_payment_int $paymentMethod) ;
-	
+
 	/**
 	 * @param unknown_type $state
 	 */
 	public function setState($state) ;
-	
+
 	/**
 	 * @param unknown_type $stateMessage
 	 */
 	public function setStateMessage($stateMessage) ;
-	
+
 	/**
 	 * @param unknown_type $transactionAmount
 	 */
 	public function setTransactionAmount($transactionAmount) ;
-	
+
 	/**
 	 * @param unknown_type $transactionId
 	 */
@@ -155,7 +154,7 @@ interface tx_paymentlib_transaction_int {
 	 * @return unknown
 	 */
 	public function getAdditional() ;
-	
+
 	/**
 	 * @param unknown_type $additional
 	 */
@@ -164,32 +163,32 @@ interface tx_paymentlib_transaction_int {
 	 * @return unknown
 	 */
 	public function getGatewayMode() ;
-	
+
 	/**
 	 * @param unknown_type $gatewayMode
 	 */
 	public function setGatewayMode($gatewayMode) ;
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getReturnAbortUrl();
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getReturnSuccesUrl();
-	
+
 	/**
 	 * @param unknown_type $returnAbortUrl
 	 */
 	public function setReturnAbortUrl($returnAbortUrl);
-	
+
 }
 
 ?>
-	
-	
+
+
 }
 
 ?>

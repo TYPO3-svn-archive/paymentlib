@@ -26,6 +26,8 @@
 
 // TODO: Place this constants in their respective classes
 
+require_once (t3lib_extMgM::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_provider_base_int.php');
+
 // Payment types
 define('TX_PAYMENTLIB_TRANSACTION_ACTION_AUTHORIZEANDTRANSFER', 200);
 define('TX_PAYMENTLIB_TRANSACTION_ACTION_AUTHORIZE', 201);
@@ -42,10 +44,6 @@ define('TX_PAYMENTLIB_TRANSACTION_RESULT_DECLINED', 301);
 define('TX_PAYMENTLIB_TRANSACTION_RESULT_FRAUD', 302);
 define('TX_PAYMENTLIB_TRANSACTION_RESULT_DUPLICATE', 303);
 define('TX_PAYMENTLIB_TRANSACTION_RESULT_OTHER', 310);
-
-// Provider modes
-define('TX_PAYMENTLIB_GATEWAYMODE_FORM', 400);
-define('TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE', 401);
 
 // Transaction states
 define('TX_PAYMENTLIB_TRANSACTION_STATE_AUTHORIZED', 500);
@@ -71,7 +69,7 @@ define('TX_PAYMENTLIB_TRANSACTION_STATE_RENEWAL_FAILED', 509);
  * @subpackage	tx_paymentlib
  * @version		1.1.0
  * @author		Robert Lemke <robert@typo3.org>
- * 
+ *
  * @deprecated 	since 01.08.2009 because of introducing a transaction object
  *             	to handle transactions in future.
  *             	Please use the new class <pre>tx_paymentlib_object_provider</pre>
@@ -79,185 +77,7 @@ define('TX_PAYMENTLIB_TRANSACTION_STATE_RENEWAL_FAILED', 509);
  */
 interface tx_paymentlib_provider_int extends tx_paymentlib_provider_base_int {
 
-	/**
-	 * Returns the provider key. Each provider implementation should have such
-	 * a unique key.
-	 *
-	 * @return	array		Provider key
-	 * @access	public
-	 */
-	public function getProviderKey ();
 
-	/**
-	 * Returns an array of keys of the supported payment methods
-	 *
-	 * @return	array		Supported payment methods
-	 * @access	public
-	 */
-	public function getAvailablePaymentMethods ();
-
-	/**
-	 * Returns TRUE if the payment implementation supports the given gateway mode.
-	 * All implementations should at least support the mode
-	 * TX_PAYMENTLIB_GATEWAYMODE_FORM.
-	 *
-	 * TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE usually requires your webserver and
-	 * the whole application to be certified if used with certain credit cards.
-	 *
-	 * @param	integer		$gatewayMode: The gateway mode to check for. One of the constants TX_PAYMENTLIB_GATEWAYMODE_*
-	 * @return	boolean		TRUE if the given gateway mode is supported
-	 * @access	public
-	 */
-	public function supportsGatewayMode ($gatewayMode);
-
-	/**
-	 * Initializes a transaction.
-	 *
-	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_TRANSACTION_ACTION_*
-	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
-	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
-	 * @param	string		$callingExtKey: Extension key of the calling script.
-	 * @return	void
-	 * @access	public
-	 */
-	 public function transaction_init ($action, $paymentMethod, $gatewayMode, $callingExtKey);
-
-	/**
-	 * Sets the payment details. Which fields can be set usually depends on the
-	 * chosen / supported gateway mode. TX_PAYMENTLIB_GATEWAYMODE_FORM does not
-	 * allow setting credit card data for example.
-	 *
-	 * @param	array		$detailsArr: The payment details array
-	 * @return	boolean		Returns TRUE if all required details have been set
-	 * @access	public
-	 */
-	 public function transaction_setDetails ($detailsArr);
-
-	/**
-	 * Validates the transaction data which was set by transaction_setDetails().
-	 * $level determines how strong the check is, 1 only checks if the data is
-	 * formally correct while level 2 checks if the credit card or bank account
-	 * really exists.
-	 *
-	 * This method is not available in mode TX_PAYMENTLIB_GATEWAYMODE_FORM!
-	 *
-	 * @param	integer		$level: Level of validation, depends on implementation
-	 * @return	boolean		Returns TRUE if validation was successful, FALSE if not
-	 * @access	public
-	 */
-	 public function transaction_validate ($level=1);
-
-	/**
-	 * Submits the prepared transaction to the payment gateway
-	 *
-	 * This method is not available in mode TX_PAYMENTLIB_GATEWAYMODE_FORM, you'll have
-	 * to render and submit a form instead.
-	 *
-	 * @return	boolean		TRUE if transaction was successul, FALSE if not. The result can be accessed via transaction_getResults()
-	 * @access	public
-	 */
-	public function transaction_process ();
-
-	/**
-	 * Returns the form action URI to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
-	 *
-	 * @return	string		Form action URI
-	 * @access	public
-	 */
-	public function transaction_formGetActionURI ();
-
-    /**
-     * Returns any extra parameter for the form tag to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
-     *
-     * @return  string      Form tag extra parameters
-     * @access  public
-     */
-    public function transaction_formGetFormParms ();
-
-    /**
-     * Returns any extra parameter for the form submit button to be used in mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
-     *
-     * @return  string      Form submit button extra parameters
-     * @access  public
-     */
-    public function transaction_formGetSubmitParms ();
-
-	/**
-	 * Returns an array of field names and values which must be included as hidden
-	 * fields in the form you render use mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
-	 *
-	 * @return	array		Field names and values to be rendered as hidden fields
-	 * @access	public
-	 */
-	public function transaction_formGetHiddenFields ();
-
-	/**
-	 * Returns an array of field names and their configuration which must be rendered
-	 * for submitting credit card numbers etc.
-	 *
-	 * The configuration has the format of the TCA fields section and can be used for
-	 * rendering th	e labels and fields with by the extension frontendformslib
-	 *
-	 * @return	array		Field names and configuration to be rendered as visible fields
-	 * @access	public
-	 */
-	public function transaction_formGetVisibleFields ();
-
-	/**
-	 * Sets the URI which the user should be redirected to after a successful payment/transaction
-	 * If your provider/gateway implementation only supports one redirect URI, set okpage and
-	 * errorpage to the same URI
-	 *
-	 * @return void
-	 * @access public
-	 */
-	public function transaction_setOkPage ($uri);
-
-	/**
-	 * Sets the URI which the user should be redirected to after a failed payment/transaction
-	 * If your provider/gateway implementation only supports one redirect URI, set okpage and
-	 * errorpage to the same URI
-	 *
-	 * @return void
-	 * @access public
-	 */
-	public function transaction_setErrorPage ($uri);
-
-	/**
-	 * Returns the results of a processed transaction
-	 *
-	 * @param	string		$reference
-	 * @return	array		Results of a processed transaction
-	 * @access	public
-	 */
-	public function transaction_getResults ($reference);
-
-	/**
-	 * Returns if the transaction has been successfull
-	 *
-	 * @param	array		results from transaction_getResults
-	 * @return	boolean		TRUE if the transaction went fine
-	 * @access	public
-	 */
-	public function transaction_succeded ($resultsArr);
-
-	/**
-	 * Returns if the transaction has been unsuccessfull
-	 *
-	 * @param	array		results from transaction_getResults
-	 * @return	boolean		TRUE if the transaction went wrong
-	 * @access	public
-	 */
-	public function transaction_failed ($resultsArr);
-
-	/**
-	 * Returns if the message of the transaction
-	 *
-	 * @param	array		results from transaction_getResults
-	 * @return	boolean		TRUE if the transaction went wrong
-	 * @access	public
-	 */
-	public function transaction_message ($resultsArr);
 
 	public function createUniqueID ($orderuid, $callingExtension);
 

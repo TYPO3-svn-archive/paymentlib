@@ -1,5 +1,4 @@
 <?php
-require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_base_payment_int.php');
 require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_transaction_int.php');
 
 /***************************************************************
@@ -29,12 +28,12 @@ require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paym
 
 /**
  * The transaction object for the paymentlib. This is the central
- * element of all payments. It holds informations about the 
+ * element of all payments. It holds informations about the
  * transaction id, the used payment method and further more.
  */
 
 class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
-	
+
 	private $created;
 	private $gateway;
 	private $callingExtension;
@@ -49,180 +48,180 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	private $gatewayMode;
 	private $returnSuccesUrl;
 	private $returnAbortUrl;
-	
+
 	function __construct($callingExtension, $gateway, $createTime, $transactionId = NULL) {
-		
+
 		if ($callingExtension != NULL
 			&& is_string($callingExtension)
 			&& $gateway != NULL
-			&& is_string($gateway) 
-			&& is_integer($createTime) 
+			&& is_string($gateway)
+			&& is_integer($createTime)
 			&& $createTime > 0
 			&& $transactionId != NULL
 			&& is_string($transactionId)
 			) {
-				
+
 				// These arguments are needed to create the transaction
 				// object
-				
+
 				$this->callingExtension = $callingExtension;
-				
+
 				$this->gateway = $gateway;
-				
+
 				$this->created = $createTime;
-				
+
 				$this->transactionId = $transactionId;
-				
+
 			} else {
-				
-				// If some initialization parameters are missing throw a 
+
+				// If some initialization parameters are missing throw a
 				// invalid argument exception
-				
+
 				throw new InvalidArgumentException(self::INVALID_CONSTRUCTOR_MESSAGE, self::INVALID_CONSTRUCTOR_ARGUMENTS);
-				
+
 			}
 	}
-	
+
 	function __clone() {
-		
+
 		$this->paymentMethod = clone $this->paymentMethod;
-		
-		
+
+
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getBasket() {
 		return $this->basket;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCreated() {
 		return $this->created;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCurrency() {
 		return $this->currency;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getCallingExtension() {
 		return $this->callingExtension;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getGateway() {
 		return $this->gateway;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getPaymentMethod() {
 		return $this->paymentMethod;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getState() {
 		return $this->state;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getStateMessage() {
 		return $this->stateMessage;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getTransactionAmount() {
 		return $this->transactionAmount;
 	}
-	
+
 	/**
 	 * @param unknown_type $basket
 	 */
 	public function setBasket($basket) {
 		$this->basket = $basket;
 	}
-	
+
 	/**
 	 * @param unknown_type $created
 	 */
 	private function setCreated($created) {
 		$this->created = $created;
 	}
-	
+
 	/**
 	 * @param unknown_type $extension
 	 */
 	private function setCallingExtension($extension) {
 		$this->callingExtension = $extension;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	private function getTransactionId() {
 		return $this->transactionId;
 	}
-	
+
 	/**
 	 * @param unknown_type $gateway
 	 */
 	private function setGateway($gateway) {
 		$this->gateway = $gateway;
 	}
-	
+
 	/**
 	 * @param unknown_type $currency
 	 */
 	public function setCurrency($currency) {
 		$this->currency = $currency;
 	}
-	
+
 	/**
 	 * @param unknown_type $paymentMethod
 	 */
 	public function setPaymentMethod(tx_paymentlib_base_payment_int $paymentMethod) {
 		$this->paymentMethod = $paymentMethod;
 	}
-	
+
 	/**
 	 * @param unknown_type $state
 	 */
 	public function setState($state) {
 		$this->state = $state;
 	}
-	
+
 	/**
 	 * @param unknown_type $stateMessage
 	 */
 	public function setStateMessage($stateMessage) {
 		$this->stateMessage = $stateMessage;
 	}
-	
+
 	/**
 	 * @param unknown_type $transactionAmount
 	 */
 	public function setTransactionAmount($transactionAmount) {
 		$this->transactionAmount = $transactionAmount;
 	}
-	
+
 	/**
 	 * @param unknown_type $transactionId
 	 */
@@ -235,7 +234,7 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	public function getAdditional() {
 		return $this->additional;
 	}
-	
+
 	/**
 	 * @param unknown_type $additional
 	 */
@@ -248,7 +247,7 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	public function getGatewayMode() {
 		return $this->gatewayMode;
 	}
-	
+
 	/**
 	 * @param unknown_type $gatewayMode
 	 */
@@ -261,21 +260,21 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	public function getReturnAbortUrl() {
 		return $this->returnAbortUrl;
 	}
-	
+
 	/**
 	 * @return unknown
 	 */
 	public function getReturnSuccesUrl() {
 		return $this->returnSuccesUrl;
 	}
-	
+
 	/**
 	 * @param unknown_type $returnAbortUrl
 	 */
 	public function setReturnAbortUrl($returnAbortUrl) {
 		$this->returnAbortUrl = $returnAbortUrl;
 	}
-	
+
 	/**
 	 * @param unknown_type $returnSuccesUrl
 	 */
@@ -284,7 +283,7 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	}
 
 
-	
+
 }
 
 ?>

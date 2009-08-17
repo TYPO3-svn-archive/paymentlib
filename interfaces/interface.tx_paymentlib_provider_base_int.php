@@ -1,7 +1,5 @@
 <?php
 
-require_once ('interfaces/interface.tx_paymentlib_provider_int.php');
-
 /***************************************************************
 * $Id$
 *
@@ -32,14 +30,14 @@ require_once ('interfaces/interface.tx_paymentlib_provider_int.php');
  *
  */
 interface tx_paymentlib_provider_base_int {
-	
+
 	// Provider modes
 	const TX_PAYMENTLIB_GATEWAYMODE_FORM = 400;
 	const TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE = 401;
-	
+
 	const PAYMENT_METHOD_REQUIRED_CODE = 0x998;
 	const PAYMENT_METHOD_REQUIRED = "No valid payment method given!";
-	
+
 	/**
 	 * Returns the provider key. Each provider implementation should have such
 	 * a unique key.
@@ -56,12 +54,12 @@ interface tx_paymentlib_provider_base_int {
 	 * @access	public
 	 */
 	public function getAvailablePaymentMethods ();
-	
+
 	/**
 	 * Returns the current transaction object
-	 * 
+	 *
 	 * @return tx_paymentlib_transaction_int	The current transaction or null
-	 * 
+	 *
 	 * @acess public
 	 */
 	public function getTransaction();
@@ -88,12 +86,12 @@ interface tx_paymentlib_provider_base_int {
 	 * @param string								$gatewayMode: The paymentlib mode. Required
 	 * @param string								$transactionId: Self generated transaction id. Optional
 	 * @return	tx_paymentlib_transaction_int		The new transaction object.
-	 * 
+	 *
 	 * @throws InvalidArgumentException				If one or more of the needed parameters are missing.
 	 * @access	public
 	 */
 	 public function transaction_init ($callingExtension, tx_paymentlib_base_payment_int $paymentMethod, $gatewayMode, $transactionId = NULL);
-	 
+
 
 	/**
 	 * Sets the payment details. Which fields can be set usually depends on the
@@ -105,46 +103,46 @@ interface tx_paymentlib_provider_base_int {
 	 * @access	public
 	 */
 	 public function transaction_setDetails ($detailsArr);
-	 
+
 	/**
 	 * Sets the return url to redirct to when the transaction is successfull
 	 * submitted
-	 * 
-	 * @param string 		$returnSuccesUrl: The url to redirect to 
+	 *
+	 * @param string 		$returnSuccesUrl: The url to redirect to
 	 * @access public
 	 */
 	public function setTransactionReturnSuccessUrl($returnSucessUrl);
-	 	
+
 	/**
-	 * Sets the return url to redirct to when the transaction is aborted or if 
+	 * Sets the return url to redirct to when the transaction is aborted or if
 	 * an error occurs during the submitting of the transaction
-	 * 
+	 *
 	 * @param string 		$returnAbortUrl: The url to redirect to redirect to
 	 * @access public
 	 */
 	public function setTransactionReturnAbortUrl($returnAbortUrl);
-	
+
 	/**
 	 * Sets the currency which is used during the transaction. This currency will
 	 * be send to the payment provider
-	 * 
+	 *
 	 * @param string		$currency
 	 * @access public
 	 */
 	public function setTransactionCurrency($currency);
-	
+
 	/**
 	 * Sets the basket which will be send to the payment provider.
-	 * 
+	 *
 	 * @param tx_paymentlib_basket_int $basket
 	 * @access public
 	 */
 	public function setTransactionBasket(tx_paymentlib_basket_int $basket);
-	
-	
+
+
 	/**
 	 * Returns the current transaction informations as array
-	 * 
+	 *
 	 * @return array		$transactionData: The informations of the current transaction
 	 * @access public
 	 */
@@ -275,8 +273,8 @@ interface tx_paymentlib_provider_base_int {
 	 * @access	public
 	 */
 	public function transaction_message ($resultsArr);
-	
-	
+
+
 }
 
 ?>
