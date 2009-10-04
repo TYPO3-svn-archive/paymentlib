@@ -1,4 +1,7 @@
 <?php
+
+require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_basket_item_int.php');
+
 /***************************************************************
 * $Id$
 *
@@ -34,11 +37,26 @@
  * @package 	TYPO3
  * @subpackage	tx_paymentlib
  * @version		1.1.0
- * @author		Franz Holzinger <franz@ttproducts.de>
+ * @author		Udo Gerhards, Udo.Gerhards@gerhards.eu
  */
-interface tx_paymentlib_basket_int {
-
-
+interface tx_paymentlib_basket_int extends Iterator {
+		
+	public function getTotal();
+	
+	public function setTotal(tx_paymentlib_price_info_int $totalAmount);
+	
+	public function getBasketItemByArticleNumber($articleNumber);
+	
+	public function setBasketItem(tx_paymentlib_basket_item_int $item);
+	
+	public function getBasketItemsByCategory($category);
+	
+	public function getAllBasketItems();
+	
+	public function __toString();
+	
+	public function __toArray();
+	
 }
 
 ?>

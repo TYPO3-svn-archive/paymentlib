@@ -281,6 +281,36 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	public function setReturnSuccesUrl($returnSuccesUrl) {
 		$this->returnSuccesUrl = $returnSuccesUrl;
 	}
+	
+	public function __toArray() {
+		
+		$transactionData = array(
+		
+			self::DB_TRANSACTION_CREATED => $this->getCreated(),
+			
+			self::DB_TRANSACTION_GATEWAY_ID => $this->getGateway(),			// Typicall the same as the current extension key
+			
+			self::DB_TRANSACTION_EXT_KEY => $this->getCallingExtension(),
+			
+			self::DB_TRANSACTION_REFERENCE => $this->getTransactionId(),
+			
+			self::DB_TRANSACTION_STATE => $this->getState(),
+			
+			self::DB_TRANSACTION_AMOUNT => $this->getTransactionAmount(),
+			
+			self::DB_TRANSACTION_CURRENCY => $this->getCurrency(),
+			
+			self::DB_TRANSACTION_PAYMENT_METHOD_KEY => $this->getGateway(),
+			
+			self::DB_TRANSACTION_PAYMENT_METHOD => serialize($this->getPaymentMethod()),	
+											
+			self::DB_TRANSACTION_MESSAGE => $this->getStateMessage(),
+			
+		);
+		
+		return $transactionData;
+		
+	}
 }
 
 ?>

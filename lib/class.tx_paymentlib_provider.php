@@ -38,12 +38,15 @@ require_once (t3lib_extMgm::extPath ( 'paymentlib' ) . 'lib/class.tx_paymentlib_
  * @subpackage	tx_paymentlib
  * @version		1.1.0
  * @author		Robert Lemke <robert@typo3.org>
+ * 
+ * @deprecated: since 01.08.2009 because of introducing a transaction object
+ *             	to handle transactions in future.
+ *             	Please use the new class <pre>tx_paymentlib_provider_base</pre> directly
+ * 			    as base for new paymentlibs in future.
+ * 				This class exists only to support older versions of paymentlibs. 
  */
 abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implements tx_paymentlib_provider_int {
-	protected $providerKey = "paymentlib"; // must be overridden
-	protected $extKey = "paymentlib"; // must be overridden
-	protected $supportedGatewayArray = array (); // must be overridden
-	protected $conf;
+	
 	protected $bSendBasket;
 	private $errorStack;
 	private $action;
@@ -75,18 +78,16 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		if (is_array ( $this->conf ) && is_array ( $extManagerConf )) {
 			
 			$this->conf = array_merge ( $this->conf, $extManagerConf );
-			
+		
 		}
 		
-		$this->setCookieArray ( 
-			array ('fe_typo_user' => $_COOKIE ['fe_typo_user'] ) 
-			);
+		$this->setCookieArray ( array ('fe_typo_user' => $_COOKIE ['fe_typo_user'] ) );
 	}
 	
 	public function getProviderKey() {
 		
 		return $this->providerKey;
-		
+	
 	}
 	
 	/**
@@ -110,12 +111,13 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		if ($filenamepath) {
 			
 			$rc = t3lib_div::xml2array ( $filenamepath );
-			$errorIndices = $filenamepath;
 			
+			$errorIndices = $filenamepath;
+		
 		} else {
 			
 			$errorIndices = $filename . ' not found';
-			
+		
 		}
 		
 		if (! is_array ( $rc )) {
@@ -123,25 +125,8 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 			$this->addError ( 'tx_paymentlib_provider::getAvailablePaymentMethods "' . $this->extKey . ':' . $errorIndices . ':' . $rc . '"' );
 			
 			$rc = FALSE;
-			
+		
 		}
-		
-		return $rc;
-	}
-	
-	/**
-	 * Initializes a transaction.
-	 *
-	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_TRANSACTION_ACTION_*
-	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
-	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
-	 * @param	string		$callingExtKey: Extension key of the calling script.
-	 * @return	void
-	 * @access	public
-	 */
-	public function supportsGatewayMode($gatewayMode) {
-		
-		$rc = in_array ( $gatewayMode, $this->supportedGatewayArray );
 		
 		return $rc;
 	}
@@ -172,75 +157,99 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 			if (is_array ( $this->conf ) && is_array ( $conf )) {
 				
 				$this->conf = array_merge ( $this->conf, $conf );
-				
+			
 			}
 			
 			$rc = TRUE;
-			
+		
 		} else {
 			
 			$rc = FALSE;
-			
+		
 		}
 		
 		return $rc;
 	}
 	
+	/**
+	 * Returns the typoscript configuration which was set
+	 * in the backend
+	 *
+	 * @return array
+	 */
+	
 	public function getConf() {
 		
 		return $this->conf;
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Returns the transaction array which will be set from the 
+	 * calling extension (for e.g. the used shop)
+	 *
+	 * @return array
+	 */
 	public function getConfig() {
 		
 		return $this->config;
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Used to set additional informations from the calling extensions
+	 * which will be merged with the current session cookie
+	 *
+	 * @param array $cookieArray
+	 * 
+	 * @deprecated since 01.08.2009 because there is no need for an extra
+	 * 			   method to merge informations from a third party extension 
+	 * 			   and to save them as cookie in this way! Use "transaction_setDetails"
+	 * 			   and the transaction_array instead, if this is really necessary
+	 */
 	public function setCookieArray($cookieArray) {
 		
 		if (is_array ( $cookieArray )) {
 			
 			$this->cookieArray = array_merge ( $this->cookieArray, $cookieArray );
-			
-		}
 		
+		}
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Used to get possibly set cookies and their values
+	 * 
+	 * @return unknown
+	 * 
+	 * @deprecated since 01.08.2009!
+	 */
 	public function getCookies() {
 		
 		$rc = '';
 		
 		if (count ( $this->cookieArray )) {
-
+			
 			$tmpArray = array ();
 			
 			foreach ( $this->cookieArray as $k => $v ) {
-
+				
 				$tmpArray [] = $k . '=' . $v;
-
+			
 			}
-
+			
 			$rc = implode ( '; ', $tmpArray );
-
+		
 		}
 		
 		return $rc;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Returns the used language for the paymentlib
+	 *
+	 * @return string
+	 */
 	public function getLanguage() {
 		
 		global $TSFE;
@@ -248,7 +257,7 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		$rc = (isset ( $TSFE->config ['config'] ) && is_array ( $TSFE->config ['config'] ) && $TSFE->config ['config'] ['language'] ? $TSFE->config ['config'] ['language'] : 'en');
 		
 		return $rc;
-		
+	
 	}
 	
 	/**
@@ -261,20 +270,24 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 	 * @access	public
 	 */
 	public function transaction_setDetails($detailsArr) {
+		
 		global $TYPO3_DB;
 		
-		$rc = TRUE;
+		$result = TRUE;
 		
 		$this->detailsArr = $detailsArr;
 		
 		$this->transactionId = $this->createUniqueID ( strval ( $detailsArr ['transaction'] ['orderuid'] ), $this->getCallingExtension () );
 		
 		$this->config = array ();
+		
 		$this->config ['currency_code'] = $detailsArr ['transaction'] ['currency'];
+		
 		if (ord ( $this->config ['currency_code'] ) == 128) { // 'euro symbol'
 			
+
 			$this->config ['currency_code'] = 'EUR';
-			
+		
 		}
 		
 		$this->config ['return'] = ($detailsArr ['transaction'] ['successlink'] ? $detailsArr ['transaction'] ['successlink'] : $this->conf ['return']);
@@ -285,71 +298,134 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		$dataArr = array (
 
 			'crdate' => time (), 
-
+	
 			'gatewayid' => $this->providerKey, 
-
-			'ext_key' => $this->callingExtension,
-
-			'reference' => $this->transactionId,
-
-			'state' => TRANSACTION_NOPROCESS,
-
-			'amount' => $detailsArr ['transaction'] ['amount'],
-
-			'currency' => $detailsArr ['transaction'] ['currency'],
-
-			'paymethod_key' => $this->providerKey,
-
-			'paymethod_method' => $this->paymentMethod,
-
-			'message' => TRANSACTION_NOT_PROCESSED_MSG
-		);
+	
+			'ext_key' => $this->callingExtension, 
+	
+			'reference' => $this->transactionId, 
+	
+			'state' => TRANSACTION_NOPROCESS, 
+	
+			'amount' => $detailsArr ['transaction'] ['amount'], 
+	
+			'currency' => $detailsArr ['transaction'] ['currency'], 
+	
+			'paymethod_key' => $this->providerKey, 
+	
+			'paymethod_method' => $this->paymentMethod, 
+	
+			'message' => TRANSACTION_NOT_PROCESSED_MSG 
+			
+			);
 		
-		$res = $TYPO3_DB->exec_DELETEquery ( 'tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr ( $this->getProviderKey (), 'tx_paymentlib_transactions' ) . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"' );
-		
-		if ($this->getTransaction ( $this->transactionId ) === FALSE) {
-			
-			$res = $TYPO3_DB->exec_INSERTquery ( 'tx_paymentlib_transactions', $dataArr );
-			
-		} else {
-			
-			$res = $TYPO3_DB->exec_UPDATEquery ( 'tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr ( $this->transactionId, 'tx_paymentlib_transactions' ), $dataArr );
-
-		}
+		$res = $this->saveTransactionInDatabase ( $dataArr );
 		
 		if (! $res) {
-
-			$rc = FALSE;
-
+			
+			$result = FALSE;
+		
 		}
 		
-		return $rc;
+		return $result;
 	}
 	
-	// TODO: Describtion is missing
+	/**
+	 * Returns the transaction with the given transactionid from the database
+	 *
+	 * @param string 			 					$transactionId: The transaction id to search 
+	 * 												for
+	 * @return array								The transaction data array or null
+	 */
+	final public function getTransactionFromDatabase($transactionId) {
+		
+		global $TYPO3_DB;
+		
+		$res = $TYPO3_DB->exec_SELECTquery ( '*', 'tx_paymentlib_transactions', 'reference = "' . $transactionId . '"' );
+		
+		if (!empty($transactionId) && $res) {
+			
+			$data = $TYPO3_DB->sql_fetch_assoc ( $res );
+			
+			return $data;
+		
+		} else {
+			
+			return null;
+		
+		}
 	
+	}
+	
+	/**
+	 * Saves the current transaction information in the database.
+	 *
+	 * @access private
+	 */
+	
+	private function saveTransactionInDatabase($transactionDataArray) {
+		
+		// Clean all not processed transactions from the past!
+		// Workaround to "clean" aborted transactions
+		
 
+		$res = $TYPO3_DB->exec_DELETEquery ( 'tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr ( $this->getProviderKey (), 'tx_paymentlib_transactions' ) . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"' );
+		
+		$transactionId = $transactionDataArray ['reference'];
+		
+		$savedTransaction = $this->getTransactionFromDatabase ( $this->transaction->getTransactionId () );
+		
+		if (is_null ( $savedTransaction )) {
+			
+			$res = $TYPO3_DB->exec_INSERTquery ( 'tx_paymentlib_transactions', $transactionDataArray );
+		
+		} else {
+			
+			$res = $TYPO3_DB->exec_UPDATEquery ( 'tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr ( $transactionId, 'tx_paymentlib_transactions' ), $transactionDataArray );
+		
+		}
+		
+		return $res;
+	
+	}
+	
+	
+	/**
+	 * After transaction_setDetails was called, this method will return
+	 * the details array
+	 *
+	 * @return array
+	 */
 	public function getDetails() {
 		return $this->detailsArr;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * After transaction_init was called, this method will return
+	 * the selected gateway mode
+	 *
+	 * @return string
+	 */
 	public function getGatewayMode() {
 		return $this->gatewayMode;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * After transaction_init was called, this method will return
+	 * the selected payment method
+	 *
+	 * @return string
+	 */
 	public function getPaymentMethod() {
 		return $this->paymentMethod;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * After transaction_init was called, this method will return
+	 * the extension key of the calling extension
+	 *
+	 * @return string
+	 */
 	public function getCallingExtension() {
 		return $this->callingExtension;
 	}
@@ -393,14 +469,14 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		
 		if ($this->gatewayMode == TX_PAYMENTLIB_GATEWAYMODE_FORM) {
 			
-			$rc = $this->conf ['formActionURI'];
-			
+			$result = $this->conf ['formActionURI'];
+		
 		} else {
 			
-			$rc = FALSE;
-			
+			$result = FALSE;
+		
 		}
-		return $rc;
+		return $result;
 	}
 	
 	/**
@@ -422,107 +498,130 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 	public function transaction_formGetSubmitParms() {
 		return '';
 	}
-	
-	// TODO: Describtion is missing
-	
 
+	/**
+	 * Creates an unique transaction id
+	 *
+	 * @param unknown_type $orderuid			 	The given order uid
+	 * @param unknown_type $callingExtension	 	The calling extension key
+	 * @return string								The created transaction id as md5-hash
+	 */
 	public function createUniqueID($orderuid, $callingExtension) {
 		
-		$rc = $this->providerKey . '#' . md5 ( $callingExtension . '-' . $orderuid );
+		$result = $this->providerKey . '#' . md5 ( $callingExtension . '-' . $orderuid );
 		
-		return $rc;
-		
+		return $result;
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Method which will be called after a transaction was send to the payment provider
+	 * and which is used to verify a successfull transaction result.
+	 *
+	 * @param unknown_type $resultsArr
+	 * @return boolean
+	 */
 	public function transaction_succeded($resultsArr) {
 		
 		if ($resultsArr ['status'] == TRANSACTION_SUCCESS) {
-
-			$rc = TRUE;
-
+			
+			$result = TRUE;
+		
 		} else {
 			
-			$rc = FALSE;
-			
+			$result = FALSE;
+		
 		}
 		
-		return $rc;
+		return $result;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Method which will be called after a transaction was send to the payment provider
+	 * and which is used to verify if a transaction has been failed.
+	 *
+	 * @param unknown_type $resultsArr
+	 * @return boolean
+	 */
 	public function transaction_failed($resultsArr) {
 		
 		if ($resultsArr ['status'] == TRANSACTION_FAILED) {
 			
-			$rc = TRUE;
-			
+			$result = TRUE;
+		
 		} else {
 			
-			$rc = FALSE;
-			
+			$result = FALSE;
+		
 		}
 		
-		return $rc;
+		return $result;
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 * @param unknown_type $resultsArr
+	 * @return unknown
+	 */
 	public function transaction_message($resultsArr) {
 		
 		return $resultsArr ['errmsg'];
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 */
 	public function clearErrors() {
 		
 		$this->errorStack = array ();
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 * @param unknown_type $error
+	 */
 	public function addError($error) {
 		
 		$this->errorStack [] = $error;
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 */
 	public function hasErrors() {
 		
-		$rc = (count ( $this->errorStack ) > 0);
-		
+		$result = (count ( $this->errorStack ) > 0);
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 * @return unknown
+	 */
 	public function getErrors() {
 		
 		return $this->errorStack;
-		
+	
 	}
 	
-	// TODO: Describtion is missing
-	
-
+	/**
+	 * Enter description here...
+	 *
+	 * @return unknown
+	 */
 	public function usesBasket() {
 		
-		$rc = (intval ( $this->bSendBasket ) > 0) || isset ( $this->detailsArr ['basket'] ) && is_array ( $this->detailsArr ['basket'] ) && count ( $this->detailsArr ['basket'] );
+		$result = (intval ( $this->bSendBasket ) > 0) || isset ( $this->detailsArr ['basket'] ) && is_array ( $this->detailsArr ['basket'] ) && count ( $this->detailsArr ['basket'] );
 		
-		return $rc;
+		return $result;
 	}
 	
 	// *****************************************************************************
@@ -534,14 +633,17 @@ abstract class tx_paymentlib_provider extends tx_paymentlib_provider_base implem
 		
 		global $TYPO3_DB;
 		
-		$rc = FALSE;
+		$result = FALSE;
+		
 		$res = $TYPO3_DB->exec_SELECTquery ( '*', 'tx_paymentlib_transactions', 'reference = "' . $transactionId . '"' );
 		
 		if ($transactionId != '' && $res) {
-			$rc = $TYPO3_DB->sql_fetch_assoc ( $res );
+			
+			$result = $TYPO3_DB->sql_fetch_assoc ( $res );
+			
 		}
 		
-		return $rc;
+		return $result;
 	}
 }
 

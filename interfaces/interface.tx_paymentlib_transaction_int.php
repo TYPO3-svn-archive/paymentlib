@@ -50,6 +50,17 @@ interface tx_paymentlib_transaction_int {
 	const TX_PAYMENTLIB_TRANSACTION_STATE_CREDIT_FAILED = 507;
 	const TX_PAYMENTLIB_TRANSACTION_STATE_RENEWED = 508;
 	const TX_PAYMENTLIB_TRANSACTION_STATE_RENEWAL_FAILED = 509;
+	
+	const DB_TRANSACTION_CREATED = 'crdate';
+	const DB_TRANSACTION_GATEWAY_ID = 'gatewayid';
+	const DB_TRANSACTION_EXT_KEY = 'ext_key';
+	const DB_TRANSACTION_REFERENCE = 'reference';
+	const DB_TRANSACTION_STATE = 'state';
+	const DB_TRANSACTION_AMOUNT = 'amount';
+	const DB_TRANSACTION_CURRENCY = "currency";
+	const DB_TRANSACTION_PAYMENT_METHOD_KEY = 'paymethod_key';
+	const DB_TRANSACTION_PAYMENT_METHOD = "paymethod_method";
+	const DB_TRANSACTION_MESSAGE = "message";
 
 	/**
 	 * @return unknown

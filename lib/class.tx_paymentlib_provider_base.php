@@ -1,26 +1,17 @@
 <?php
 
-require_once(t3lib_extMgm::extPath('paymentlib') . 'lib/transaction/class.tx_paymentlib_transaction.php');
-require_once(t3lib_extMgm::extPath('paymentlib') . 'interfaces/interface.tx_paymentlib_base_payment_int.php');
+require_once (t3lib_extMgm::extPath ( 'paymentlib' ) . 'lib/transaction/class.tx_paymentlib_transaction.php');
+
+require_once (t3lib_extMgm::extPath ( 'paymentlib' ) . 'lib/transaction/class.tx_paymentlib_payment_base.php');
+
+require_once (t3lib_extMgm::extPath ( 'paymentlib' ) . 'lib/interfaces/interface.tx_paymentlib_payment_base_int.php');
 
 class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	
-	// Needed database fields	
-	const DB_TRANSACTION_CREATED = 'crdate';
-	const DB_TRANSACTION_GATEWAY_ID = 'gatewayid';
-	const DB_TRANSACTION_EXT_KEY = 'ext_key';
-	const DB_TRANSACTION_REFERENCE = 'reference';
-	const DB_TRANSACTION_STATE = 'state';
-	const DB_TRANSACTION_AMOUNT = 'amount';
-	const DB_TRANSACTION_CURRENCY = "currency";
-	const DB_TRANSACTION_PAYMENT_METHOD_KEY = 'paymethod_key';
-	const DB_TRANSACTION_PAYMENT_METHOD = "paymethod_method";
-	const DB_TRANSACTION_MESSAGE = "message";
-	
 	// TODO: Extemd table
-	const DB_TRANSACTION_BASKET = "basket";								// unserialized value from $transaction->additional because it could be a simple data value or an object
+	const DB_TRANSACTION_BASKET = "basket";
 	const DB_TRANSACTION_GATEWAY_MODE = "gateway_mode";
-	const DB_TRANSACTION_ADDITIONAL = "additional";	
+	const DB_TRANSACTION_ADDITIONAL = "additional";
 	
 	// Needed configurations	
 	const CONF_RETURN_SUCCESS_URL = 'return';
@@ -35,10 +26,14 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	const EXT_STATIC_INFO_TABLES_SYMBOL_LEFT = "cu_symbol_left";
 	const EXT_STATIC_INFO_TABLES_SYMBOL_RIGHT = "cu_symbol_right";
 	
+	// Error message
+	const TRANSACTION_NOT_INITILIZED_MESSAGE = "Transaction is not initialized! Please verify the transaction initialization!";
 	
-	protected $providerKey = "paymentlib";	// must be overridden
-	protected $extKey = "paymentlib";		// must be overridden
-	protected $supportedGatewayArray;		// must be overridden 
+	const TRANSACTION_NOT_INITIALIZED_ERROR_CODE = 0x999;
+	
+	protected $providerKey = "paymentlib"; // must be overridden
+	protected $extKey = "paymentlib"; // must be overridden
+	protected $supportedGatewayArray; // must be overridden 
 	protected $conf;
 	private $transaction;
 	
@@ -50,12 +45,9 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	function __construct() {
 		
 		$this->supportedGatewayArray = array (
-			
-			self::TX_PAYMENTLIB_GATEWAYMODE_FORM,
-			self::TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE
-			
-		);		
-		
+
+		self::TX_PAYMENTLIB_GATEWAYMODE_FORM, self::TX_PAYMENTLIB_GATEWAYMODE_WEBSERVICE );
+	
 	}
 	
 	/**
@@ -66,10 +58,9 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * @see tx_paymentlib_provider_int::getConf()
 	 * @access public
 	 */
-	public function getConf ()	{
+	public function getConf() {
 		return $this->conf;
 	}
-	
 	
 	/**
 	 * Returns TRUE if the payment implementation supports the given gateway mode.
@@ -88,13 +79,13 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	public function getProviderKey() {
 		
 		return $this->providerKey;
-		
+	
 	}
 	
 	/**
 	 * Returns an array of keys of the supported payment methods
 	 *
-	 * @return	array		Supported payment methods
+	 * @return	array		Supported payment methods as objects
 	 * 
 	 * @see tx_paymentlib_provider_int::getAvailablePaymentMethods()
 	 * @access public
@@ -102,8 +93,7 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	public function getAvailablePaymentMethods() {
 		
 	//TODO - Insert your code here
-	}	
-
+	}
 	
 	/**
 	 * Method to check if the current paymentlib supports the selected
@@ -114,12 +104,12 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * @see tx_paymentlib_provider_base_int::supportsGatewayMode
 	 * @access public
 	 */
-	public function supportsGatewayMode ($gatewayMode)	{
-
-		$supported = in_array($gatewayMode, $this->supportedGatewayArray);
+	public function supportsGatewayMode($gatewayMode) {
+		
+		$supported = in_array ( $gatewayMode, $this->supportedGatewayArray );
 		
 		return $supported;
-		
+	
 	}
 	
 	/**
@@ -133,7 +123,7 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	public function getTransaction() {
 		
 		return $this->transaction;
-		
+	
 	}
 	
 	/**
@@ -152,61 +142,64 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 */
 	public function transaction_init($callingExtension, tx_paymentlib_base_payment_int $paymentMethod, $gatewayMode, $transactionId = NULL) {
 		
-		if (!empty($paymentMethod)) {
+		if (! empty ( $paymentMethod )) {
 			
 			// Initialize transaction object
 			
-			if (empty($transactionId)) {
+
+			if (empty ( $transactionId )) {
 				
-				$mills = strval(microtime());
-				$rand = strval(mt_rand(0, microtime()));
+				$mills = strval ( microtime () );
+				$rand = strval ( mt_rand ( 0, microtime () ) );
 				
-				$transactionId = md5($callingExtension."-".$this->providerKey."#".$rand.'-'.$mills);
-				
+				$transactionId = md5 ( $callingExtension . "-" . $this->providerKey . "#" . $rand . '-' . $mills );
+			
 			}
-	
 			
 			$transaction = null;
 			
 			try {
-			
+				
 				// Try to create the transaction objet with the given 
 				// parameters	
 				// This will raise an invalid argument exception if 
 				// not all parameters are set.	
 				
-				$transaction = new tx_paymentlib_transaction($callingExtension, $this->providerKey, time(), $transactionId);
+
+				$transaction = new tx_paymentlib_transaction ( $callingExtension, $this->providerKey, time (), $transactionId );
 				
-				$transaction->setPaymentMethod($paymentMethod);
+				$transaction->setPaymentMethod ( $paymentMethod );
 				
-				if (empty($gatewayMode) || !in_array($gatewayMode, $this->supportedGatewayArray)) {
+				if (empty ( $gatewayMode ) || ! in_array ( $gatewayMode, $this->supportedGatewayArray )) {
 					
 					$gatewayMode = TX_PAYMENTLIB_GATEWAYMODE_FORM;
-					
+				
 				}
 				
-				$transaction->setGatewayMode($gatewayMode);
+				$transaction->setGatewayMode ( $gatewayMode );
 				
-				$transaction->setState(TRANSACTION_NOPROCESS);
+				$transaction->setState ( TRANSACTION_NOPROCESS );
 				
-				$transaction->setStateMessage(TRANSACTION_NOT_PROCESSED_MSG);
-	
-				return clone($this->transaction);
+				$transaction->setStateMessage ( TRANSACTION_NOT_PROCESSED_MSG );
 				
-			} catch (InvalidArgumentException $e) {
+				$this->saveTransactionInDatabase ();
 				
-				unset($transaction);
+				return clone ($this->transaction);
+			
+			} catch ( InvalidArgumentException $e ) {
+				
+				unset ( $transaction );
 				
 				throw $e;
-				
-			}			
 			
+			}
+		
 		} else {
 			
-			throw InvalidArgumentException(self::PAYMENT_METHOD_REQUIRED, self::PAYMENT_METHOD_REQUIRED_CODE);
-			
-		}
+			throw InvalidArgumentException ( self::PAYMENT_METHOD_REQUIRED, self::PAYMENT_METHOD_REQUIRED_CODE );
 		
+		}
+	
 	}
 	
 	/**
@@ -219,16 +212,28 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 */
 	public function transaction_setDetails(tx_paymentlib_transaction_int $transaction) {
 		
-		$this->transaction_setCurrency($transaction->getCurrency());
+		if ($this->transactionInitialized ()) {
+			
+			$this->transaction_setCurrency ( $transaction->getCurrency () );
+			
+			$this->transaction_setBasket ( $transaction->getBasket () );
+			
+			$this->transaction_setReturnSuccessUrl ( $transaction->getReturnSuccessUrl () );
+			
+			$this->transaction_setReturnAbortUrl ( $transaction->getReturnAbortUrl () );
+			
+			$this->saveTransactionInDatabase ();
 		
-		$this->transaction_setBasket($transaction->getBasket());
+		} else {
+			
+			$message = self::TRANSACTION_NOT_INITIALIZED;
+			
+			throw new invalidArgumentException ( $message, self::TRANSACTION_NOT_INITIALIZED_ERROR_CODE );
 		
-		$this->transaction_setReturnSuccessUrl($transaction->getReturnSuccessUrl());
-
-		$this->transaction_setReturnAbortUrl($transaction->getReturnAbortUrl());
-		
+		}
+	
 	}
-
+	
 	/**
 	 * Sets the currency which is used during the transaction. This currency will
 	 * be send to the payment provider
@@ -240,42 +245,56 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 */
 	public function setTransactionCurrency($currency) {
 		
-		global $TYPO3_DB;
-		
-		if (empty($currency)) {
+		if ($this->transactionInitialized ()) {
 			
-			$currency = $this->conf[self::CONF_CURRENCY];
+			global $TYPO3_DB;
 			
-		}
-		
-		// Lookup to static info tables to mapp country related
-		// currency symbols to their cu_iso3-value e.g.
-		// '€' => 'EUR'
-
-		if (!empty($currency) && t3lib_extMgm::isLoaded ( self::EXT_STATIC_INFO_TABLES )) {
+			if (empty ( $currency )) {
+				
+				$currency = $this->conf [self::CONF_CURRENCY];
 			
-			$where = self::EXT_STATIC_INFO_TABLES_SYMBOL_LEFT."='".$currency."' or ".self::EXT_STATIC_INFO_TABLES_SYMBOL_RIGHT."='".$currency."'";
-		
-			$res = $TYPO3_DB->exec_SELECTquery(self::EXT_STATIC_INFO_TABLES_CUE_ISO_3_FIELD, self::EXT_STATIC_INFO_TABLES_CURRENCY_TABLE, $where);
-
-			if ($res) {
-				
-				$data = $TYPO3_DB->sql_fetch_assoc($res);
-				
-				$currency = $data[self::EXT_STATIC_INFO_TABLES_CUE_ISO_3_FIELD];
-				
 			}
 			
+			// Lookup to static info tables to mapp country related
+			// currency symbols to their cu_iso3-value e.g.
+			// '€' => 'EUR'
+			
+
+			if (! empty ( $currency ) && t3lib_extMgm::isLoaded ( self::EXT_STATIC_INFO_TABLES )) {
+				
+				$where = self::EXT_STATIC_INFO_TABLES_SYMBOL_LEFT . "='" . $currency . "' or " . self::EXT_STATIC_INFO_TABLES_SYMBOL_RIGHT . "='" . $currency . "'";
+				
+				$res = $TYPO3_DB->exec_SELECTquery ( self::EXT_STATIC_INFO_TABLES_CUE_ISO_3_FIELD, self::EXT_STATIC_INFO_TABLES_CURRENCY_TABLE, $where );
+				
+				if ($res) {
+					
+					$data = $TYPO3_DB->sql_fetch_assoc ( $res );
+					
+					$currency = $data [self::EXT_STATIC_INFO_TABLES_CUE_ISO_3_FIELD];
+				
+				}
+			
+			}
+			
+			if (! empty ( $currency ) && is_object ( $this->transaction )) {
+				
+				// TODO: Check currency if it is in "cu_iso_3"-format from static info tables
+				
+
+				$this->transaction->setCurrency ( $currency );
+			
+			}
+			
+			$this->saveTransactionInDatabase ();
+		
+		} else {
+			
+			$message = self::TRANSACTION_NOT_INITIALIZED;
+			
+			throw new invalidArgumentException ( $message, self::TRANSACTION_NOT_INITIALIZED_ERROR_CODE );
+		
 		}
-		
-		if (!empty($currency) && is_object($this->transaction)) {
-			
-			// TODO: Check currency if it is in "cu_iso_3"-format from static info tables
-			
-			$this->transaction->setCurrency($currency);
-			
-		} 
-		
+	
 	}
 	
 	/**
@@ -285,17 +304,25 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * 
 	 * @see tx_paymentlib_provider_int::setTransactionBaske()
 	 * @access public
-	 */	
+	 */
 	public function setTransactionBasket(tx_paymentlib_basket_int $basket) {
 		
-		if (!empty($basket) && is_object($basket)) {
+		if ($this->transactionInitialized () && ! empty ( $basket ) && is_object ( $basket )) {
 			
-			$this->transaction->setBasket($basket);
+			$this->transaction->setBasket ( $basket );
 			
-		}
+			$this->saveTransactionInDatabase ();
 		
+		} else {
+			
+			$message = self::TRANSACTION_NOT_INITIALIZED;
+			
+			throw new invalidArgumentException ( $message, self::TRANSACTION_NOT_INITIALIZED_ERROR_CODE );
+		
+		}
+	
 	}
-
+	
 	/**
 	 * Sets the return url to redirct to when the transaction is aborted or if 
 	 * an error occurs during the submitting of the transaction
@@ -307,19 +334,28 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 */
 	public function setTransactionReturnSuccessUrl($returnSuccessUrl) {
 		
-		if (!empty($returnSuccessUrl) && is_object($this->transaction)) {
+		if ($this->transactionInitialized ()) {
 			
-			$this->transaction->setReturnAbortUrl($returnSuccessUrl);
+			if (! empty ( $returnSuccessUrl ) && is_object ( $this->transaction )) {
+				
+				$this->transaction->setReturnAbortUrl ( $returnSuccessUrl );
 			
+			} else {
+				
+				$this->transaction->setReturnAbortUrl ( $this->conf [self::CONF_RETURN_ABORT_URL] );
+			
+			}
+		
 		} else {
 			
-			$this->transaction->setReturnAbortUrl($this->conf[self::CONF_RETURN_ABORT_URL]);
+			$message = self::TRANSACTION_NOT_INITIALIZED;
 			
-		}
+			throw new invalidArgumentException ( $message, self::TRANSACTION_NOT_INITIALIZED_ERROR_CODE );
 		
+		}
+	
 	}
-
-
+	
 	/**
 	 * Sets the currency which is used during the transaction. This currency will
 	 * be send to the payment provider
@@ -330,55 +366,27 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * @access public
 	 */
 	public function setTransactionReturnAbortUrl($returnAbortUrl) {
+		
+		if ($this->transactionInitialized ()) {
 			
-		if (!empty($returnAbortUrl) && is_object($this->transaction)) {
+			if (! empty ( $returnAbortUrl ) && is_object ( $this->transaction )) {
+				
+				$this->transaction->setReturnAbortUrl ( $returnAbortUrl );
 			
-			$this->transaction->setReturnAbortUrl($returnAbortUrl);
+			} else {
+				
+				$this->transaction->setReturnSuccessUrl ( $this->conf [self::CONF_RETURN_SUCCESS_URL] );
 			
+			}
+		
 		} else {
 			
-			$this->transaction->setReturnSuccessUrl($this->conf[self::CONF_RETURN_SUCCESS_URL]);
+			$message = self::TRANSACTION_NOT_INITIALIZED;
 			
+			throw new invalidArgumentException ( $message, self::TRANSACTION_NOT_INITIALIZED_ERROR_CODE );
+		
 		}
-		
-	}
 	
-	/**
-	 * Returns the current transaction informations as array
-	 * 
-	 * @return array		$transactionData: The informations of the current transaction
-	 * 
-	 * @see tx_paymentlib_provider_int::getTransactionArray()
-	 * @access public
-	 */	
-	public function getTransactionAsArray() {
-		
-		$transactionData = array(
-		
-			self::DB_TRANSACTION_CREATED => $this->transaction->getCreated(),
-			
-			self::DB_TRANSACTION_GATEWAY_ID => $this->transaction->getGateway(),			// Typicall the same as the current extension key
-			
-			self::DB_TRANSACTION_EXT_KEY => $this->transaction->getCallingExtension(),
-			
-			self::DB_TRANSACTION_REFERENCE => $this->transaction->getTransactionId(),
-			
-			self::DB_TRANSACTION_STATE => $this->transaction->getState(),
-			
-			self::DB_TRANSACTION_AMOUNT => $this->transaction->getTransactionAmount(),
-			
-			self::DB_TRANSACTION_CURRENCY => $this->transaction->getCurrency(),
-			
-			self::DB_TRANSACTION_PAYMENT_METHOD_KEY => $this->transaction->getGateway(),
-			
-			self::DB_TRANSACTION_PAYMENT_METHOD => serialize($this->transaction->getPaymentMethod()),	
-											
-			self::DB_TRANSACTION_MESSAGE => $this->transaction->getStateMessage(),
-			
-		);
-		
-		return $transactionData;	
-		
 	}
 	
 	/**
@@ -392,30 +400,34 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 		// Clean all not processed transactions from the past!
 		// Workaround to "clean" aborted transactions
 		
-		$res = $TYPO3_DB->exec_DELETEquery('tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr($this->getProviderKey(), 'tx_paymentlib_transactions') . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"');
+
+		$res = $TYPO3_DB->exec_DELETEquery ( 'tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr ( $this->getProviderKey (), 'tx_paymentlib_transactions' ) . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"' );
 		
 		try {
 			
-			$savedTransaction = $this->getTransaction($this->transactionId);
-
-			$transactionDataArray = $this->getTransactionAsArray();
+			$savedTransaction = $this->getTransactionFromDatabase ( $this->transaction->getTransactionId () );
 			
-			if (!is_null($savedTransaction))	{
+			$transactionDataArray = $this->transaction->__toArray ();
+			
+			if (is_null ( $savedTransaction )) {
 				
-				$res = $TYPO3_DB->exec_INSERTquery('tx_paymentlib_transactions', $transactionDataArray);
-				
+				$res = $TYPO3_DB->exec_INSERTquery ( 'tx_paymentlib_transactions', $transactionDataArray );
+			
 			} else {
 				
-				$res = $TYPO3_DB->exec_UPDATEquery('tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr($this->transactionId, 'tx_paymentlib_transactions'), $transactionDataArray);
-				
-			}		
+				$res = $TYPO3_DB->exec_UPDATEquery ( 'tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr ( $this->transactionId, 'tx_paymentlib_transactions' ), $transactionDataArray );
+			
+			}
+			
+			return $res;
 		
-		} catch (InvalidArgumentException $e) {
+		} catch ( InvalidArgumentException $e ) {
 			
-			// Should never occur
-			
+		// Should never occur
+		
+
 		}
-		
+	
 	}
 	
 	/**
@@ -426,48 +438,74 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * @return tx_paymentlib_transaction_int		The transaction object or null
 	 * @throws InvalidArgumentException 			if an error occured when initializint the transaction
 	 * 												object;
-	 */	
-	final public function getTransactionFromDatabase($transactionId)	{
+	 */
+	final public function getTransactionFromDatabase($transactionId) {
 		
 		global $TYPO3_DB;
 		
-		$res = $TYPO3_DB->exec_SELECTquery('*', 'tx_paymentlib_transactions', 'reference = "'.$transactionId.'"');
-
-		if ($transactionId !='' && $res)	{
+		$res = $TYPO3_DB->exec_SELECTquery ( '*', 'tx_paymentlib_transactions', 'reference = "' . $transactionId . '"' );
+		
+		if (! empty ( $transactionId ) && $res) {
 			
-			$data = $TYPO3_DB->sql_fetch_assoc($res);
+			$data = $TYPO3_DB->sql_fetch_assoc ( $res );
 			
 			$transaction = null;
 			
 			try {
-			
-				$transaction = new tx_paymentlib_transaction($data['ext_key'], $data['paymethod_key'], $data['crdate'], $data['reference']);
-			
-				$transaction->setTransactionAmount($data['amount']);
-			
-				$transaction->setCurrency($data['currency']);
-			
-				$transaction->setState($data['state']);
-			
-				$transaction->setStateMessage($data['message']);
-			
-				$transaction->setPaymentMethod(unserialize($data['payment_method']));
-
-				return $transaction;
-
-			} catch (InvalidArgumentException $e) {
 				
-				unset($transaction);
+				$transaction = new tx_paymentlib_transaction ( $data ['ext_key'], $data ['paymethod_key'], $data ['crdate'], $data ['reference'] );
+				
+				$transaction->setTransactionAmount ( $data ['amount'] );
+				
+				$transaction->setCurrency ( $data ['currency'] );
+				
+				$transaction->setState ( $data ['state'] );
+				
+				$transaction->setStateMessage ( $data ['message'] );
+				
+				$transaction->setPaymentMethod ( unserialize ( $data ['payment_method'] ) );
+				
+				return $transaction;
+			
+			} catch ( InvalidArgumentException $e ) {
+				
+				unset ( $transaction );
 				
 				throw $e;
-				
+			
 			}
 		} else {
 			
 			return null;
-			
+		
 		}
-
+	
+	}
+	
+	protected function transactionInitialized() {
+		
+		$transaction = $this->transaction;
+		
+		if (! is_null ( $transaction )) {
+			
+			$transactionId = $transaction->getTransactionId ();
+			
+			if (! is_null ( $transactionId ) && ! empty ( $transactionId )) {
+				
+				return true;
+			
+			} else {
+				
+				return false;
+			
+			}
+		
+		} else {
+			
+			return false;
+		
+		}
+	
 	}
 	
 	/**
@@ -549,8 +587,6 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	//TODO - Insert your code here
 	}
 	
-
-	
 	/**
 	 * 
 	 * @param array		results from transaction_getResults 
@@ -573,7 +609,7 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 		
 	//TODO - Insert your code here
 	}
-		
+	
 	/**
 	 * 
 	 * @return void 

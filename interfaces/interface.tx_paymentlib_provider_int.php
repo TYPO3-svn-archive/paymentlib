@@ -72,11 +72,10 @@ define('TX_PAYMENTLIB_TRANSACTION_STATE_RENEWAL_FAILED', 509);
  *
  * @deprecated 	since 01.08.2009 because of introducing a transaction object
  *             	to handle transactions in future.
- *             	Please use the new class <pre>tx_paymentlib_object_provider</pre>
- * 			 	as base for new paymentlibs in future
+ *             	Please use the new class <pre>tx_paymentlib_provider_base</pre> directly
+ * 			    as base for new paymentlibs in future.
  */
 interface tx_paymentlib_provider_int extends tx_paymentlib_provider_base_int {
-
 
 
 	public function createUniqueID ($orderuid, $callingExtension);
