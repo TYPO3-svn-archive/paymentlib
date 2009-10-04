@@ -281,9 +281,6 @@ class tx_paymentlib_transaction implements tx_paymentlib_transaction_int {
 	public function setReturnSuccesUrl($returnSuccesUrl) {
 		$this->returnSuccesUrl = $returnSuccesUrl;
 	}
-
-
-
 }
 
 ?>

@@ -244,7 +244,7 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 		
 		if (empty($currency)) {
 			
-			$currency = $this->confi[self::CONF_CURRENCY];
+			$currency = $this->conf[self::CONF_CURRENCY];
 			
 		}
 		
@@ -305,7 +305,7 @@ class tx_paymentlib_provider_base implements tx_paymentlib_provider_base_int {
 	 * @see tx_paymentlib_provider_int::setTransactionReturnUrl()
 	 * @access public
 	 */
-	public function setTransactionReturnSuccessUrl($returnSucessUrl) {
+	public function setTransactionReturnSuccessUrl($returnSuccessUrl) {
 		
 		if (!empty($returnSuccessUrl) && is_object($this->transaction)) {
 			

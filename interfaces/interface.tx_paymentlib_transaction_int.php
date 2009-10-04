@@ -102,26 +102,6 @@ interface tx_paymentlib_transaction_int {
 	public function setBasket($basket) ;
 
 	/**
-	 * @param unknown_type $created
-	 */
-	private function setCreated($created) ;
-
-	/**
-	 * @param unknown_type $extension
-	 */
-	private function setCallingExtension($extension) ;
-
-	/**
-	 * @return unknown
-	 */
-	private function getTransactionId() ;
-
-	/**
-	 * @param unknown_type $gateway
-	 */
-	private function setGateway($gateway) ;
-
-	/**
 	 * @param unknown_type $currency
 	 */
 	public function setCurrency($currency) ;
