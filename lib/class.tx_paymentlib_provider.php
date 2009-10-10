@@ -1,6 +1,6 @@
 <?php
 /***************************************************************
-* $Id: class.tx_paymentlib_provider.php 23190 2009-08-08 17:47:48Z franzholz $
+* $Id$
 *
 *  Copyright notice
 *
@@ -52,6 +52,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	private	$callingExtension;
 	private $detailsArr;
 	private $transactionId;
+	private $referenceId;
 	private $config = array();
 	private $cookieArray = array();
 
@@ -215,9 +216,10 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		$rc = TRUE;
 		$this->detailsArr = $detailsArr;
 
-		$this->transactionId =
-			$this->createUniqueID(strval($detailsArr['transaction']['orderuid']), $this->getCallingExtension());
+		$referenceId =
+			$this->createReferenceUid(strval($detailsArr['transaction']['orderuid']), $this->getCallingExtension());
 
+		$this->setTransactionUid($transactionId);
 		$this->config = array();
 		$this->config['currency_code'] = $detailsArr['transaction']['currency'];
 		if (ord($this->config['currency_code']) == 128)	{ // 'euro symbol'
@@ -231,7 +233,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 			'crdate' => time(),
 			'gatewayid' => $this->providerKey,
 			'ext_key' => $this->callingExtension,
-			'reference' => $this->transactionId,
+			'reference' => $transactionId,
 			'state' => TRANSACTION_NOPROCESS,
 			'amount' => $detailsArr['transaction']['amount'],
 			'currency' => $detailsArr['transaction']['currency'],
@@ -242,10 +244,10 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 
 		$res = $TYPO3_DB->exec_DELETEquery('tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr($this->getProviderKey(), 'tx_paymentlib_transactions') . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"');
 
-		if ($this->getTransaction($this->transactionId) === FALSE)	{
+		if ($this->getTransaction($transactionId) === FALSE)	{
 			$res = $TYPO3_DB->exec_INSERTquery('tx_paymentlib_transactions', $dataArr);
 		} else {
-			$res = $TYPO3_DB->exec_UPDATEquery('tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr($this->transactionId, 'tx_paymentlib_transactions'), $dataArr);
+			$res = $TYPO3_DB->exec_UPDATEquery('tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr($transactionId, 'tx_paymentlib_transactions'), $dataArr);
 		}
 		if (!$res)	{
 			$rc = FALSE;
@@ -345,12 +347,6 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	}
 
 
-	public function createUniqueID ($orderuid, $callingExtension)	{
-		$rc = $this->providerKey . '#' . md5($callingExtension . '-' . $orderuid);
-		return $rc;
-	}
-
-
 	public function transaction_succeded ($resultsArr)	{
 		if ($resultsArr['status'] == TRANSACTION_SUCCESS)	{
 			$rc = TRUE;
@@ -419,8 +415,59 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		if ($transactionId !='' && $res)	{
 			$rc = $TYPO3_DB->sql_fetch_assoc($res);
 		}
-
 		return $rc;
+	}
+
+
+	public function createReferenceUid ($orderuid, $callingExtension)	{
+		$rc = $this->providerKey . '#' . md5($callingExtension . '-' . $orderuid);
+		return $rc;
+	}
+
+
+	/**
+	 * Sets the reference of the transaction table
+	 *
+	 * @param	integer		unique transaction id
+	 * @return	void
+	 * @access	public
+	 */
+	public function setReferenceUid ($reference)	{
+		$this->referenceId = $reference;
+	}
+
+
+	/**
+	 * Fetches the reference of the transaction table, which is the reference
+	 *
+	 * @return	void		unique reference
+	 * @access	public
+	 */
+	public function getReferenceUid ()	{
+		return $this->referenceId;
+	}
+
+
+	/**
+	 * Sets the uid of the transaction table
+	 *
+	 * @param	integer		unique transaction id
+	 * @return	void
+	 * @access	public
+	 */
+	public function setTransactionUid ($transUid)	{
+		$this->transactionId = $transUid;
+	}
+
+
+	/**
+	 * Fetches the uid of the transaction table, which is the reference
+	 *
+	 * @return	void		unique transaction id
+	 * @access	public
+	 */
+	public function getTransactionUid ()	{
+		return $this->transactionId;
 	}
 }
 

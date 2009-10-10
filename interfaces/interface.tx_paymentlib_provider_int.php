@@ -1,6 +1,6 @@
 <?php
 /***************************************************************
-* $Id: interface.tx_paymentlib_provider_int.php 23190 2009-08-08 17:47:48Z franzholz $
+* $Id$
 *
 *  Copyright notice
 *
@@ -248,8 +248,6 @@ interface tx_paymentlib_provider_int {
 	 */
 	public function transaction_message ($resultsArr);
 
-	public function createUniqueID ($orderuid, $callingExtension);
-
 	public function clearErrors ();
 
 	public function addError ($error);
@@ -260,6 +258,24 @@ interface tx_paymentlib_provider_int {
 
 	public function usesBasket ();
 
+	public function createReferenceUid ($orderuid, $callingExtension);
+
+	/**
+	 * Sets the uid of the transaction table
+	 *
+	 * @param	integer		unique transaction id
+	 * @return	void
+	 * @access	public
+	 */
+	public function setTransactionUid ($transUid);
+
+	/**
+	 * Fetches the uid of the transaction table, which is the reference
+	 *
+	 * @return	void		unique transaction id
+	 * @access	public
+	 */
+	public function getTransactionUid ();
 }
 
 ?>

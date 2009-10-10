@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: locallang.php 23190 2009-08-08 17:47:48Z franzholz $
+ * $Id$
  * Language labels for extension paymentlib
  * 
  * This file is detected by the translation tool.

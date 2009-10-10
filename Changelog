@@ -1,4 +1,7 @@
 
+2009-10-10	Franz Holzinger <franz@ttproducts.de>
+	* bugfixing
+
 2009-10-09	Franz Holzinger <franz@ttproducts.de>
 	* Change to proxy to support the whole interface without possibility to access the real provider object
 	* proxy uses the interface for the provider and is not inherited from the provider class

@@ -1,6 +1,6 @@
 <?php
 /**
- * $Id: locallang_db.php 23190 2009-08-08 17:47:48Z franzholz $
+ * $Id$
  * Language labels for database tables/fields belonging to extension "paymentlib"
  * 
  * This file is detected by the translation tool.

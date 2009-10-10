@@ -1,5 +1,5 @@
 <?php
-// $Id: tca.php 23190 2009-08-08 17:47:48Z franzholz $
+// $Id$
 
 if (!defined ('TYPO3_MODE')) 	die ('Access denied.');
 

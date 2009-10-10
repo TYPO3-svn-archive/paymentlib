@@ -1,6 +1,6 @@
 <?php
 /***************************************************************
-* $Id: class.tx_paymentlib_providerproxy.php 23190 2009-08-08 17:47:48Z franzholz $
+* $Id$
 *
 *  Copyright notice
 *
@@ -104,7 +104,7 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	 * @access	public
 	 */
 	public function transaction_init ($action, $method, $gatewaymode, $callingExtKey) {
-		unset ($this->dbTransactionUid);
+		$this->providerObj->setTransactionUid(0);
 		return $this->providerObj->transaction_init($action, $method, $gatewaymode, $callingExtKey);
 	}
 
@@ -199,7 +199,8 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 				'tx_paymentlib_transactions',
 				$fields
 			);
-			$this->dbTransactionUid = $TYPO3_DB->sql_insert_id();
+			$dbTransactionUid = $TYPO3_DB->sql_insert_id();
+			$this->providerObj->setTransactionId($dbTransactionUid);
 		}
 		return $processResult;
 	}
@@ -304,16 +305,17 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 		$resultsArr = $this->providerObj->transaction_getResults($reference);
 
 		if (is_array ($resultsArr)) {
+			$dbTransactionUid = $this->providerObj->getTransactionId();
 			$dbResult = $TYPO3_DB->exec_SELECTquery (
 				'gatewayid',
 				'tx_paymentlib_transactions',
-				'uid='.intval($this->dbTransactionUid)
+				'uid='.intval($dbTransactionUid)
 			);
 
 			if ($dbResult) {
 				$row = $TYPO3_DB->sql_fetch_assoc($dbResult);
 				if (is_array ($row) && $row['gatewayid'] === $resultsArr['gatewayid']) {
-					$resultsArr['internaltransactionuid'] = $this->dbTransactionUid;
+					$resultsArr['internaltransactionuid'] = $dbTransactionUid;
 				} else {
 						// If the transaction doesn't exist yet in the database, create a transaction record.
 						// Usually the case with unsuccessful orders with gateway mode FORM.
@@ -380,12 +382,6 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	}
 
 
-	public function createUniqueID ($orderuid, $callingExtension)	{
-		$rc = $this->providerObj->createUniqueID($orderuid, $callingExtension);
-		return $rc;
-	}
-
-
 	public function clearErrors ()	{
 		$this->providerObj->clearErrors();
 	}
@@ -409,6 +405,36 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	public function usesBasket ()	{
 		$this->providerObj->usesBasket();
 	}
+
+
+	public function createReferenceUid ($orderuid, $callingExtension)	{
+		$rc = $this->providerObj->createReferenceUid($orderuid, $callingExtension);
+		return $rc;
+	}
+
+
+	/**
+	 * Sets the uid of the transaction table
+	 *
+	 * @param	integer		unique transaction id
+	 * @return	void
+	 * @access	public
+	 */
+	public function setTransactionUid ($transUid)	{
+		$this->providerObj->setTransactionUid($transUid);
+	}
+
+
+	/**
+	 * Fetches the uid of the transaction table, which is the reference
+	 *
+	 * @return	void		unique transaction id
+	 * @access	public
+	 */
+	public function getTransactionUid ()	{
+		$this->providerObj->getTransactionUid();
+	}
+
 
 // 	public function getRealInstance () {
 // 		return $this->providerObj;

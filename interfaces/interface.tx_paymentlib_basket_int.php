@@ -1,6 +1,6 @@
 <?php
 /***************************************************************
-* $Id: interface.tx_paymentlib_basket_int.php 23190 2009-08-08 17:47:48Z franzholz $
+* $Id$
 *
 *  Copyright notice
 *
