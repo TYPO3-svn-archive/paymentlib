@@ -188,8 +188,10 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	public function transaction_process () {
 		global $TYPO3_DB;
 
-		$processResult = $this->providerObj->transaction_process ();
-		$resultsArr = $this->providerObj->transaction_getResults();
+		$processResult = $this->providerObj->transaction_process();
+		$referenceId = $this->getReferenceUid();
+		$resultsArr = $this->providerObj->transaction_getResults($referenceId);
+
 		if (is_array ($resultsArr)) {
 			$fields = $resultsArr;
 			$fields['crdate'] = time();
@@ -409,6 +411,30 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 
 	public function createReferenceUid ($orderuid, $callingExtension)	{
 		$rc = $this->providerObj->createReferenceUid($orderuid, $callingExtension);
+		return $rc;
+	}
+
+
+	/**
+	 * Sets the reference of the transaction table
+	 *
+	 * @param	integer		unique transaction id
+	 * @return	void
+	 * @access	public
+	 */
+	public function setReferenceUid ($reference)	{
+		$this->providerObj->setReferenceUid($reference);
+	}
+
+
+	/**
+	 * Fetches the reference of the transaction table, which is the reference
+	 *
+	 * @return	void		unique reference
+	 * @access	public
+	 */
+	public function getReferenceUid ()	{
+		$rc = $this->providerObj->getReferenceUid();
 		return $rc;
 	}
 
