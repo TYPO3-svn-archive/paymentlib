@@ -45,6 +45,9 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	protected $supportedGatewayArray = array();	// must be overridden
 	protected $conf;
 	protected $bSendBasket;
+	protected $optionsArray;
+	protected $resultsArray = array();
+	protected $config = array();
 	private $errorStack;
 	private	$action;
 	private	$paymentMethod;
@@ -53,7 +56,6 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	private $detailsArr;
 	private $transactionId;
 	private $referenceId;
-	private $config = array();
 	private $cookieArray = array();
 
 
@@ -71,8 +73,12 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		$this->conf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['paymentlib']);
 		$extManagerConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$this->extKey]);
 
-		if (is_array($this->conf) && is_array($extManagerConf))	{
-			$this->conf = array_merge($this->conf, $extManagerConf);
+		if (is_array($this->conf))	{
+			if (is_array($extManagerConf))	{
+				$this->conf = array_merge($this->conf, $extManagerConf);
+			}
+		} else if (is_array($extManagerConf))	{
+			$this->conf = $extManagerConf;
 		}
 
 		$this->setCookieArray(
@@ -121,7 +127,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	/**
 	 * Initializes a transaction.
 	 *
-	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_TRANSACTION_ACTION_*
+	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
 	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$callingExtKey: Extension key of the calling script.
@@ -138,7 +144,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	/**
 	 * Initializes a transaction.
 	 *
-	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_TRANSACTION_ACTION_*
+	 * @param	integer		$action: Type of the transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
 	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$callingExtKey: Extension key of the calling script.
@@ -146,14 +152,15 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	 * @return	void
 	 * @access	public
 	 */
-	public function transaction_init ($action, $paymentMethod, $gatewayMode, $callingExtKey, $conf=array())	{
+	public function transaction_init ($action, $paymentMethod, $gatewayMode, $callingExtKey, $config=array())	{
+
 		if ($this->supportsGatewayMode($gatewayMode))	{
 			$this->action = $action;
 			$this->paymentMethod = $paymentMethod;
 			$this->gatewayMode = $gatewayMode;
 			$this->callingExtension = $callingExtKey;
-			if (is_array($this->conf) && is_array($conf))	{
-				$this->conf = array_merge($this->conf, $conf);
+			if (is_array($this->config) && is_array($config))	{
+				$this->config = array_merge($this->config, $config);
 			}
 			$rc = TRUE;
 		} else {
@@ -170,6 +177,11 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 
 	public function getConfig ()	{
 		return $this->config;
+	}
+
+
+	public function setConfig (&$config)	{
+		$this->config = $config;
 	}
 
 
@@ -217,9 +229,9 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		$this->detailsArr = $detailsArr;
 
 		$referenceId =
-			$this->createReferenceUid(strval($detailsArr['transaction']['orderuid']), $this->getCallingExtension());
+			$this->generateReferenceUid(strval($detailsArr['transaction']['orderuid']), $this->getCallingExtension());
 
-		$this->setTransactionUid($transactionId);
+		$this->setReferenceUid($referenceId);
 		$this->config = array();
 		$this->config['currency_code'] = $detailsArr['transaction']['currency'];
 		if (ord($this->config['currency_code']) == 128)	{ // 'euro symbol'
@@ -228,31 +240,42 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 		$this->config['return'] = ($detailsArr['transaction']['successlink'] ? $detailsArr['transaction']['successlink'] : $this->conf['return']);
 		$this->config['cancel_return'] = ($detailsArr['transaction']['returi'] ? $detailsArr['transaction']['returi'] : $this->conf['cancel_return']);
 
+		if (isset($detailsArr['options']) && is_array($detailsArr['options']) && isset($this->optionsArray) && is_array($this->optionsArray))	{
+
+			foreach ($detailsArr['options'] as $k => $v)	{
+				if (in_array($k, $this->optionsArray))	{
+					$this->config[$k] = $v;
+				}
+			}
+			$xmlOptions = t3lib_div::array2xml_cs($this->config,'phparray',array(),'utf-8');
+		}
+
 		// Store order id in database
 		$dataArr = array(
 			'crdate' => time(),
 			'gatewayid' => $this->providerKey,
 			'ext_key' => $this->callingExtension,
-			'reference' => $transactionId,
-			'state' => TRANSACTION_NOPROCESS,
+			'reference' => $referenceId,
+			'state' => TX_PAYMENTLIB_TRANSACTION_STATE_NO_PROCESS,
 			'amount' => $detailsArr['transaction']['amount'],
 			'currency' => $detailsArr['transaction']['currency'],
 			'paymethod_key' => $this->providerKey,
 			'paymethod_method' => $this->paymentMethod,
-			'message' => TRANSACTION_NOT_PROCESSED_MSG
+			'message' => TX_PAYMENTLIB_TRANSACTION_MESSAGE_NOT_PROCESSED,
+			'config' => $xmlOptions,
+			'user' => $detailsArr['user']
 		);
 
 		$res = $TYPO3_DB->exec_DELETEquery('tx_paymentlib_transactions', 'gatewayid =' . $TYPO3_DB->fullQuoteStr($this->getProviderKey(), 'tx_paymentlib_transactions') . ' AND amount LIKE "0.00" AND message LIKE "s:25:\"Transaction not processed\";"');
 
-		if ($this->getTransaction($transactionId) === FALSE)	{
+		if ($this->getTransaction($referenceId) === FALSE)	{
 			$res = $TYPO3_DB->exec_INSERTquery('tx_paymentlib_transactions', $dataArr);
 		} else {
-			$res = $TYPO3_DB->exec_UPDATEquery('tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr($transactionId, 'tx_paymentlib_transactions'), $dataArr);
+			$res = $TYPO3_DB->exec_UPDATEquery('tx_paymentlib_transactions', 'reference = ' . $TYPO3_DB->fullQuoteStr($referenceId, 'tx_paymentlib_transactions'), $dataArr);
 		}
 		if (!$res)	{
 			$rc = FALSE;
 		}
-
 		return $rc;
 	}
 
@@ -315,7 +338,6 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	 * @access	public
 	 */
 	public function transaction_formGetActionURI ()	{
-
 		if ($this->gatewayMode == TX_PAYMENTLIB_GATEWAYMODE_FORM)	{
 			$rc = $this->conf['formActionURI'];
 		} else {
@@ -347,8 +369,51 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	}
 
 
-	public function transaction_succeded ($resultsArr)	{
-		if ($resultsArr['status'] == TRANSACTION_SUCCESS)	{
+	/**
+	 * Returns an array of field names and values which must be included as hidden
+	 * fields in the form you render use mode TX_PAYMENTLIB_GATEWAYMODE_FORM.
+	 *
+	 * @return	array		Field names and values to be rendered as hidden fields
+	 * @access	public
+	 */
+	public function transaction_formGetHiddenFields ()	{
+		return FALSE;
+	}
+
+
+	public function transaction_formGetVisibleFields () 	{
+		return FALSE;
+	}
+
+
+	/**
+	 * Returns the results of a processed transaction. You must override this by your method.
+	 *
+	 * @param	string		$reference
+	 * @return	array		Results of a processed transaction
+	 * @access	public
+	 */
+	public function transaction_getResults ($reference)	{
+		$resultsArray = array();
+		$resultsArray['message'] = 'internal error in extension "' . $this->extKey . '": method "tx_paymentlib_provider::transaction_getResults" has not been overwritten';
+		$resultsArray['state'] = TX_PAYMENTLIB_TRANSACTION_RESULT_INTERNAL_ERROR;
+		$this->setResultsArray($resultsArray);
+		return $resultsArray;
+	}
+
+
+	public function setResultsArray ($resultsArray)	{
+		$this->resultsArray = $resultsArray;
+	}
+
+
+	public function getResultsArray ()	{
+		return $this->resultsArray;
+	}
+
+
+	public function transaction_succeded ($resultsArray)	{
+		if ($resultsArray['state'] == TX_PAYMENTLIB_TRANSACTION_RESULT_APPROVED || $resultsArray['state'] == TX_PAYMENTLIB_TRANSACTION_RESULT_DUPLICATE)	{
 			$rc = TRUE;
 		} else {
 			$rc = FALSE;
@@ -358,9 +423,9 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	}
 
 
-	public function transaction_failed ($resultsArr)	{
+	public function transaction_failed ($resultsArray)	{
 
-		if ($resultsArr['status'] == TRANSACTION_FAILED)	{
+		if ($resultsArray['state'] == TX_PAYMENTLIB_TRANSACTION_RESULT_DECLINED)	{
 			$rc = TRUE;
 		} else {
 			$rc = FALSE;
@@ -370,8 +435,14 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	}
 
 
-	public function transaction_message ($resultsArr)	{
-		return $resultsArr['errmsg'];
+	public function transaction_message ($resultsArray)	{
+
+		if (isset($resultsArray['message']))	{
+			$rc = $resultsArray['message'];
+		} else {
+			$rc = 'internal error in extension "' . $this->extKey . '": The resultsArray has not been filled for method transaction_message';
+		}
+		return $rc;
 	}
 
 
@@ -406,20 +477,20 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 	// Helpers
 	// *****************************************************************************
 
-	public function getTransaction ($transactionId)	{
+	public function getTransaction ($referenceId)	{
 		global $TYPO3_DB;
 
 		$rc = FALSE;
-		$res = $TYPO3_DB->exec_SELECTquery('*', 'tx_paymentlib_transactions', 'reference = "'.$transactionId.'"');
+		$res = $TYPO3_DB->exec_SELECTquery('*', 'tx_paymentlib_transactions', 'reference = "' . $referenceId . '"');
 
-		if ($transactionId !='' && $res)	{
+		if ($referenceId !='' && $res)	{
 			$rc = $TYPO3_DB->sql_fetch_assoc($res);
 		}
 		return $rc;
 	}
 
 
-	public function createReferenceUid ($orderuid, $callingExtension)	{
+	public function generateReferenceUid ($orderuid, $callingExtension)	{
 		$rc = $this->providerKey . '#' . md5($callingExtension . '-' . $orderuid);
 		return $rc;
 	}
@@ -438,7 +509,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 
 
 	/**
-	 * Fetches the reference of the transaction table, which is the reference
+	 * Fetches the reference of the transaction table
 	 *
 	 * @return	void		unique reference
 	 * @access	public
@@ -461,7 +532,7 @@ abstract class tx_paymentlib_provider implements tx_paymentlib_provider_int {
 
 
 	/**
-	 * Fetches the uid of the transaction table, which is the reference
+	 * Fetches the uid of the transaction table
 	 *
 	 * @return	void		unique transaction id
 	 * @access	public

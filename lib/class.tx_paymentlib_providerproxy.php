@@ -100,12 +100,13 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	 * @param	string		$paymentMethod: Payment method, one of the values of getSupportedMethods()
 	 * @param	integer		$gatewayMode: Gateway mode for this transaction, one of the constants TX_PAYMENTLIB_GATEWAYMODE_*
 	 * @param	string		$callingExtKey: Extension key of the calling script.
+	 * @param	array		$config: configuration for the extension
 	 * @return	void
 	 * @access	public
 	 */
-	public function transaction_init ($action, $method, $gatewaymode, $callingExtKey) {
+	public function transaction_init ($action, $method, $gatewaymode, $callingExtKey, $config=array()) {
 		$this->providerObj->setTransactionUid(0);
-		return $this->providerObj->transaction_init($action, $method, $gatewaymode, $callingExtKey);
+		return $this->providerObj->transaction_init($action, $method, $gatewaymode, $callingExtKey, $config);
 	}
 
 
@@ -196,13 +197,13 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 			$fields = $resultsArr;
 			$fields['crdate'] = time();
 			$fields['pid'] = intval($this->extensionManagerConf['pid']);
-			$fields['remotemessages'] = (is_array ($fields['remotemessages'])) ? serialize($fields['remotemessages']) : $fields['remotemessages'];
+			$fields['message'] = (is_array ($fields['message'])) ? serialize($fields['message']) : $fields['message'];
 			$dbResult = $TYPO3_DB->exec_INSERTquery (
 				'tx_paymentlib_transactions',
 				$fields
 			);
 			$dbTransactionUid = $TYPO3_DB->sql_insert_id();
-			$this->providerObj->setTransactionId($dbTransactionUid);
+			$this->providerObj->getTransactionUid($dbTransactionUid);
 		}
 		return $processResult;
 	}
@@ -307,7 +308,7 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 		$resultsArr = $this->providerObj->transaction_getResults($reference);
 
 		if (is_array ($resultsArr)) {
-			$dbTransactionUid = $this->providerObj->getTransactionId();
+			$dbTransactionUid = $this->providerObj->getTransactionUid();
 			$dbResult = $TYPO3_DB->exec_SELECTquery (
 				'gatewayid',
 				'tx_paymentlib_transactions',
@@ -409,8 +410,8 @@ class tx_paymentlib_providerproxy implements tx_paymentlib_provider_int {
 	}
 
 
-	public function createReferenceUid ($orderuid, $callingExtension)	{
-		$rc = $this->providerObj->createReferenceUid($orderuid, $callingExtension);
+	public function generateReferenceUid ($orderuid, $callingExtension)	{
+		$rc = $this->providerObj->generateReferenceUid($orderuid, $callingExtension);
 		return $rc;
 	}
 

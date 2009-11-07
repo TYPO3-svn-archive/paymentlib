@@ -12,6 +12,7 @@ CREATE TABLE tx_paymentlib_transactions (
 	ext_key varchar(100) DEFAULT '' NOT NULL,
 	paymethod_key varchar(100) DEFAULT '' NOT NULL,
 	paymethod_method varchar(100) DEFAULT '' NOT NULL,
+	config text,
 	user text,
 
 	PRIMARY KEY (uid),
